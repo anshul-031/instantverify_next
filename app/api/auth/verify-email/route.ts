@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { verify } from "jsonwebtoken";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   try {
-    const url = new URL(req.url);
-    const token = url.searchParams.get("token");
+    const { token } = await req.json();
 
     if (!token) {
       return NextResponse.json(
@@ -14,27 +13,30 @@ export async function GET(req: Request) {
       );
     }
 
-    let payload;
-    try {
-      payload = verify(token, process.env.NEXTAUTH_SECRET!) as { id: string };
-    } catch (error) {
-      return NextResponse.json(
-        { message: "Invalid or expired token" },
-        { status: 400 }
-      );
-    }
+    const decoded = verify(token, process.env.NEXTAUTH_SECRET!) as {
+      userId: string;
+    };
 
-    await prisma.user.update({
-      where: { id: payload.id },
+    const user = await prisma.user.update({
+      where: { id: decoded.userId },
       data: { emailVerified: new Date() },
     });
 
-    return NextResponse.redirect(new URL("/login?verified=true", req.url));
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Email verified successfully",
+    });
   } catch (error) {
     console.error("Email verification error:", error);
     return NextResponse.json(
-      { message: "Something went wrong" },
-      { status: 500 }
+      { message: "Invalid or expired verification token" },
+      { status: 400 }
     );
   }
 }

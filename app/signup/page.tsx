@@ -1,40 +1,46 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Github, Facebook, Shield, Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Github, Facebook, Shield, Eye, EyeOff } from 'lucide-react';
 
-const signupSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().regex(/^[6-9]\d{9}$/, "Invalid Indian phone number"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
-  confirmPassword: z.string(),
-  dateOfBirth: z.string().refine((date) => {
-    const dob = new Date(date);
-    const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear();
-    return age >= 18;
-  }, "You must be at least 18 years old"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const signupSchema = z
+  .object({
+    firstName: z.string().min(2, 'First name must be at least 2 characters'),
+    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+    email: z.string().email('Invalid email address'),
+    phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number')
+      .regex(
+        /[^A-Za-z0-9]/,
+        'Password must contain at least one special character'
+      ),
+    confirmPassword: z.string(),
+    dateOfBirth: z.string().refine((date) => {
+      const dob = new Date(date);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      return age >= 18;
+    }, 'You must be at least 18 years old'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type SignupForm = z.infer<typeof signupSchema>;
 
@@ -55,21 +61,21 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupForm) => {
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || "Something went wrong");
+        throw new Error(result.message || 'Something went wrong');
       }
 
       setVerificationSent(true);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Something went wrong");
+      setError(error instanceof Error ? error.message : 'Something went wrong');
     }
   };
 
@@ -79,9 +85,12 @@ export default function SignupPage() {
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
             <Shield className="mx-auto h-12 w-12 text-primary" />
-            <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Check your email
+            </h1>
             <p className="text-sm text-muted-foreground">
-              We&apos;ve sent you a verification link. Please check your email to verify your account.
+              We&apos;ve sent you a verification link. Please check your email
+              to verify your account.
             </p>
           </div>
         </div>
@@ -100,7 +109,8 @@ export default function SignupPage() {
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
             <p className="text-lg">
-              "Join thousands of businesses who trust us with their verification needs. Start your journey today."
+              "Join thousands of businesses who trust us with their verification
+              needs. Start your journey today."
             </p>
           </blockquote>
         </div>
@@ -108,7 +118,9 @@ export default function SignupPage() {
       <div className="lg:p-8">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[450px]">
           <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Create an account
+            </h1>
             <p className="text-sm text-muted-foreground">
               Enter your details to create your account
             </p>
@@ -122,11 +134,13 @@ export default function SignupPage() {
                   <Input
                     id="firstName"
                     placeholder="John"
-                    {...register("firstName")}
+                    {...register('firstName')}
                     className="border-primary/20 focus:border-primary"
                   />
                   {errors.firstName && (
-                    <p className="text-sm text-red-500">{errors. firstName.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.firstName.message}
+                    </p>
                   )}
                 </div>
 
@@ -135,11 +149,13 @@ export default function SignupPage() {
                   <Input
                     id="lastName"
                     placeholder="Doe"
-                    {...register("lastName")}
+                    {...register('lastName')}
                     className="border-primary/20 focus:border-primary"
                   />
                   {errors.lastName && (
-                    <p className="text-sm text-red-500">{errors.lastName.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.lastName.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -150,7 +166,7 @@ export default function SignupPage() {
                   id="email"
                   type="email"
                   placeholder="name@example.com"
-                  {...register("email")}
+                  {...register('email')}
                   className="border-primary/20 focus:border-primary"
                 />
                 {errors.email && (
@@ -164,7 +180,7 @@ export default function SignupPage() {
                   id="phone"
                   type="tel"
                   placeholder="9876543210"
-                  {...register("phone")}
+                  {...register('phone')}
                   className="border-primary/20 focus:border-primary"
                 />
                 {errors.phone && (
@@ -177,11 +193,13 @@ export default function SignupPage() {
                 <Input
                   id="dateOfBirth"
                   type="date"
-                  {...register("dateOfBirth")}
+                  {...register('dateOfBirth')}
                   className="border-primary/20 focus:border-primary"
                 />
                 {errors.dateOfBirth && (
-                  <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.dateOfBirth.message}
+                  </p>
                 )}
               </div>
 
@@ -190,8 +208,8 @@ export default function SignupPage() {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
-                    {...register("password")}
+                    type={showPassword ? 'text' : 'password'}
+                    {...register('password')}
                     className="border-primary/20 focus:border-primary"
                   />
                   <Button
@@ -209,7 +227,9 @@ export default function SignupPage() {
                   </Button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -218,8 +238,8 @@ export default function SignupPage() {
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    {...register("confirmPassword")}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    {...register('confirmPassword')}
                     className="border-primary/20 focus:border-primary"
                   />
                   <Button
@@ -237,7 +257,9 @@ export default function SignupPage() {
                   </Button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.confirmPassword.message}
+                  </p>
                 )}
               </div>
 
@@ -248,7 +270,7 @@ export default function SignupPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Creating account..." : "Create account"}
+                {isSubmitting ? 'Creating account...' : 'Create account'}
               </Button>
             </form>
 
@@ -266,7 +288,7 @@ export default function SignupPage() {
             <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
-                onClick={() => signIn("github", { callbackUrl: "/" })}
+                onClick={() => signIn('github', { callbackUrl: '/' })}
                 className="hover:border-primary/70 hover:bg-primary/10"
               >
                 <Github className="mr-2 h-4 w-4" />
@@ -274,7 +296,7 @@ export default function SignupPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => signIn("facebook", { callbackUrl: "/" })}
+                onClick={() => signIn('facebook', { callbackUrl: '/' })}
                 className="hover:border-primary/70 hover:bg-primary/10"
               >
                 <Facebook className="mr-2 h-4 w-4" />
@@ -284,11 +306,8 @@ export default function SignupPage() {
           </div>
 
           <p className="px-8 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-primary hover:underline"
-            >
+            Already have an account?{' '}
+            <Link href="/login" className="text-primary hover:underline">
               Sign in
             </Link>
           </p>

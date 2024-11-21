@@ -38,6 +38,11 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 280 83.2% 53.3%;
+    --chart-3: 340 83.2% 53.3%;
+    --chart-4: 40 83.2% 53.3%;
+    --chart-5: 160 83.2% 53.3%;
   }
 
   .dark {
@@ -68,16 +73,35 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--ring)) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--ring)) 100%
+  );
 }
 
 .glass-card {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Fix alignment issues */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: 1280px;
+  width: 100%;
+}
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.grid-center {
+  @apply grid place-items-center;
 }

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Shield } from "lucide-react";
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Shield } from 'lucide-react';
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -14,7 +14,9 @@ export function Navbar() {
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Shield className="h-6 w-6 text-primary" />
-            <span className="hidden font-bold sm:inline-block">InstantVerify.in</span>
+            <span className="hidden font-bold sm:inline-block">
+              InstantVerify.in
+            </span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
@@ -22,25 +24,39 @@ export function Navbar() {
             {session ? (
               <>
                 <Link href="/verify">
-                  <Button variant="ghost" className="h-9 w-9 px-0 sm:h-10 sm:px-4 sm:w-auto">
-                    <span className="hidden sm:inline-block">Start Verification</span>
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-9 px-0 sm:h-10 sm:px-4 sm:w-auto"
+                  >
+                    <span className="hidden sm:inline-block">
+                      Start Verification
+                    </span>
                     <Shield className="h-5 w-5 sm:hidden" />
                   </Button>
                 </Link>
                 <Link href="/profile">
-                  <Button variant="ghost" className="h-9">Profile</Button>
+                  <Button variant="ghost" className="h-9">
+                    Profile
+                  </Button>
                 </Link>
                 <Link href="/settings">
-                  <Button variant="ghost" className="h-9">Settings</Button>
+                  <Button variant="ghost" className="h-9">
+                    Settings
+                  </Button>
                 </Link>
               </>
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" className="h-9">Login</Button>
+                  <Button variant="ghost" className="h-9">
+                    Login
+                  </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button variant="default" className="h-9 bg-primary hover:bg-primary/90">
+                  <Button
+                    variant="default"
+                    className="h-9 bg-primary hover:bg-primary/90"
+                  >
                     Sign Up
                   </Button>
                 </Link>
