@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Github, Facebook, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { ResendVerification } from '@/components/auth/resend-verification';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,11 +31,13 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationNeeded, setVerificationNeeded] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -52,6 +55,11 @@ function LoginForm() {
         email: data.email,
         password: data.password,
       });
+
+      if (result?.error === 'Please verify your email before signing in') {
+        setVerificationNeeded(data.email);
+        return;
+      }
 
       if (result?.error) {
         toast({
@@ -113,6 +121,23 @@ function LoginForm() {
               Enter your email to sign in to your account
             </p>
           </div>
+
+          {verificationNeeded && (
+            <Alert className="mb-4">
+              <AlertDescription className="text-center">
+                Please verify your email before signing in.
+                <ResendVerification 
+                  email={verificationNeeded}
+                  onSuccess={() => {
+                    toast({
+                      title: "Verification Email Sent",
+                      description: "Please check your inbox for the verification link.",
+                    });
+                  }}
+                />
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="grid gap-6">
             <form onSubmit={handleSubmit(onSubmit)}>
