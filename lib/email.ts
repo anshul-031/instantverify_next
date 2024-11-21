@@ -15,9 +15,16 @@ export async function sendEmail({ to, subject, html }: EmailParams) {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
     },
+    tls: {
+      // Required for some SMTP servers
+      ciphers: 'SSLv3',
+      rejectUnauthorized: false
+    }
   });
 
   try {
+    await transporter.verify();
+    
     await transporter.sendMail({
       from: process.env.SMTP_FROM_EMAIL,
       to,
