@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { prisma } from "@/lib/prisma";
-import { v4 as uuidv4 } from "uuid";
-import { sendEmail } from "@/lib/email";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/prisma';
+import { v4 as uuidv4 } from 'uuid';
+import { sendEmail } from '@/lib/email';
+import { authOptions } from '../auth/auth-options';
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { email, type } = await req.json();
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     if (!user || user.credits < 1) {
       return NextResponse.json(
-        { message: "Insufficient credits" },
+        { message: 'Insufficient credits' },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
         email,
         type,
         link,
-        status: "pending",
+        status: 'pending',
         expiresAt,
       },
     });
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     await sendEmail({
       to: email,
-      subject: "Verification Request",
+      subject: 'Verification Request',
       html: `
         <p>You have received a verification request.</p>
         <p>Click the link below to complete your verification:</p>
@@ -60,13 +60,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      message: "Verification request sent successfully",
+      message: 'Verification request sent successfully',
       requestId: request.id,
     });
   } catch (error) {
-    console.error("Verification request error:", error);
+    console.error('Verification request error:', error);
     return NextResponse.json(
-      { message: "Failed to create verification request" },
+      { message: 'Failed to create verification request' },
       { status: 500 }
     );
   }

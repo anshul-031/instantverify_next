@@ -1,71 +1,59 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/prisma';
+import crypto from 'crypto';
+import { authOptions } from '../../auth/auth-options';
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    const body = await req.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
-    const {
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-      transactionId,
-    } = await req.json();
+    // Verify signature
+    const text = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const generated_signature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .update(text)
+      .digest('hex');
 
-    const transaction = await prisma.transaction.findUnique({
-      where: { id: transactionId },
-    });
-
-    if (!transaction) {
+    if (generated_signature !== razorpay_signature) {
       return NextResponse.json(
-        { message: "Transaction not found" },
-        { status: 404 }
-      );
-    }
-
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-      .update(body)
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
-      await prisma.transaction.update({
-        where: { id: transactionId },
-        data: { status: "failed" },
-      });
-      return NextResponse.json(
-        { message: "Invalid payment signature" },
+        { message: 'Invalid signature' },
         { status: 400 }
       );
     }
 
+    // Update transaction status
+    const transaction = await prisma.transaction.findFirst({
+      where: { paymentId: razorpay_order_id },
+    });
+
+    if (!transaction) {
+      return NextResponse.json(
+        { message: 'Transaction not found' },
+        { status: 404 }
+      );
+    }
+
+    // Update transaction and add credits to user
     await prisma.$transaction([
       prisma.transaction.update({
-        where: { id: transactionId },
-        data: { status: "completed" },
+        where: { id: transaction.id },
+        data: { status: 'completed' },
       }),
       prisma.user.update({
-        where: { id: session.user.id },
-        data: {
-          credits: {
-            increment: transaction.credits,
-          },
-        },
+        where: { id: transaction.userId },
+        data: { credits: { increment: transaction.credits } },
       }),
     ]);
 
-    return NextResponse.json({ message: "Payment verified successfully" });
+    return NextResponse.json({
+      message: 'Payment verified successfully',
+    });
   } catch (error) {
-    console.error("Payment verification error:", error);
+    console.error('Payment verification error:', error);
     return NextResponse.json(
-      { message: "Failed to verify payment" },
+      { message: 'Failed to verify payment' },
       { status: 500 }
     );
   }

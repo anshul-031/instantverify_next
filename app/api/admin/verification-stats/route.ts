@@ -15,25 +15,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        role: true,
-        credits: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
+    const stats = await prisma.report.groupBy({
+      by: ['status'],
+      _count: true,
     });
 
-    return NextResponse.json(users);
+    const result = stats.reduce(
+      (acc, { status, _count }) => ({
+        ...acc,
+        [status.toLowerCase()]: _count,
+      }),
+      { pending: 0, completed: 0, failed: 0 }
+    );
+
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Users fetch error:', error);
+    console.error('Verification stats error:', error);
     return NextResponse.json(
-      { message: 'Failed to fetch users' },
+      { message: 'Failed to fetch verification stats' },
       { status: 500 }
     );
   }

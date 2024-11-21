@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 interface CourtRecord {
   court: string;
@@ -66,7 +66,7 @@ export function CourtRecords({ data }: CourtRecordsProps) {
                     <TableCell>
                       <Badge
                         variant={
-                          record.status === "Closed" ? "success" : "warning"
+                          record.status === 'Closed' ? 'secondary' : 'outline'
                         }
                       >
                         {record.status}
@@ -106,13 +106,13 @@ export function CourtRecords({ data }: CourtRecordsProps) {
                     <TableCell>
                       <Badge
                         variant={
-                          list.status === "Clear" ? "success" : "destructive"
+                          list.status === 'Clear' ? 'secondary' : 'destructive'
                         }
                       >
                         {list.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{list.details || "N/A"}</TableCell>
+                    <TableCell>{list.details || 'N/A'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

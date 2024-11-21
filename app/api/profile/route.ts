@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/prisma';
+import { authOptions } from '../auth/auth-options';
 
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { firstName, lastName, phone } = await req.json();
@@ -21,7 +21,7 @@ export async function PUT(req: Request) {
 
     if (phoneExists) {
       return NextResponse.json(
-        { message: "Phone number already in use" },
+        { message: 'Phone number already in use' },
         { status: 400 }
       );
     }
@@ -32,13 +32,13 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json({
-      message: "Profile updated successfully",
+      message: 'Profile updated successfully',
       user,
     });
   } catch (error) {
-    console.error("Profile update error:", error);
+    console.error('Profile update error:', error);
     return NextResponse.json(
-      { message: "Failed to update profile" },
+      { message: 'Failed to update profile' },
       { status: 500 }
     );
   }

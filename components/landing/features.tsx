@@ -1,36 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, FileCheck, Clock, Lock, Award } from "lucide-react";
+import { Shield, Lock, Zap, Clock } from "lucide-react";
 
 const features = [
   {
-    title: "Instant Verification",
-    description: "Real-time verification of government IDs and background checks",
-    icon: Clock,
+    title: "Real-time Verification",
+    description: "Instant verification results with advanced AI technology",
+    icon: Zap,
   },
   {
     title: "Secure & Compliant",
-    description: "End-to-end encrypted data handling with complete privacy",
+    description: "Bank-grade security with full regulatory compliance",
     icon: Lock,
   },
   {
-    title: "Multiple Use Cases",
-    description: "Perfect for tenant, domestic help, and driver verification",
-    icon: Users,
-  },
-  {
-    title: "Official Verification",
-    description: "Direct verification through government databases",
+    title: "Trusted Platform",
+    description: "Trusted by leading businesses across India",
     icon: Shield,
   },
   {
-    title: "Comprehensive Reports",
-    description: "Detailed reports with criminal record checks",
-    icon: FileCheck,
-  },
-  {
-    title: "Trusted Service",
-    description: "Recognized and trusted by businesses across India",
-    icon: Award,
+    title: "24/7 Support",
+    description: "Round-the-clock customer support and assistance",
+    icon: Clock,
   },
 ];
 
@@ -39,17 +29,19 @@ export function FeaturesSection() {
     <section className="container space-y-8">
       <div className="text-center">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-          Why Choose InstantVerify
+          Key Features
         </h2>
         <p className="mt-4 text-muted-foreground">
-          Comprehensive verification solutions for all your needs
+          Advanced verification solutions for modern businesses
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {features.map((feature) => (
-          <Card key={feature.title}>
+          <Card key={feature.title} className="text-center">
             <CardHeader>
-              <feature.icon className="h-8 w-8 text-primary" />
+              <div className="flex justify-center">
+                <feature.icon className="h-12 w-12 text-primary" />
+              </div>
               <CardTitle>{feature.title}</CardTitle>
             </CardHeader>
             <CardContent>

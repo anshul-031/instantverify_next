@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 interface IdVerificationProps {
   data: {
@@ -68,8 +68,8 @@ export function IdVerification({ data }: IdVerificationProps) {
                   <XCircle className="h-5 w-5 text-red-500" />
                 )}
                 <span>Photo Match</span>
-                <Badge variant={data.photoMatch ? "success" : "destructive"}>
-                  {data.photoMatch ? "Matched" : "Not Matched"}
+                <Badge variant={data.photoMatch ? 'secondary' : 'destructive'}>
+                  {data.photoMatch ? 'Matched' : 'Not Matched'}
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
@@ -79,8 +79,8 @@ export function IdVerification({ data }: IdVerificationProps) {
                   <XCircle className="h-5 w-5 text-red-500" />
                 )}
                 <span>ID Information</span>
-                <Badge variant={data.idMatch ? "success" : "destructive"}>
-                  {data.idMatch ? "Verified" : "Not Verified"}
+                <Badge variant={data.idMatch ? 'secondary' : 'destructive'}>
+                  {data.idMatch ? 'Verified' : 'Not Verified'}
                 </Badge>
               </div>
             </div>
