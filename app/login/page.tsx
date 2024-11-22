@@ -31,7 +31,9 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationNeeded, setVerificationNeeded] = useState<string | null>(null);
+  const [verificationNeeded, setVerificationNeeded] = useState<string | null>(
+    null
+  );
 
   const {
     register,
@@ -63,25 +65,25 @@ function LoginForm() {
 
       if (result?.error) {
         toast({
-          title: "Authentication Error",
-          description: "Invalid email or password",
-          variant: "destructive",
+          title: 'Authentication Error',
+          description: 'Invalid email or password',
+          variant: 'destructive',
         });
         return;
       }
 
       toast({
-        title: "Success",
-        description: "Logged in successfully",
+        title: 'Success',
+        description: 'Logged in successfully',
       });
 
       router.push(callbackUrl);
       router.refresh();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'An error occurred. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -126,12 +128,13 @@ function LoginForm() {
             <Alert className="mb-4">
               <AlertDescription className="text-center">
                 Please verify your email before signing in.
-                <ResendVerification 
+                <ResendVerification
                   email={verificationNeeded}
                   onSuccess={() => {
                     toast({
-                      title: "Verification Email Sent",
-                      description: "Please check your inbox for the verification link.",
+                      title: 'Verification Email Sent',
+                      description:
+                        'Please check your inbox for the verification link.',
                     });
                   }}
                 />
@@ -193,10 +196,10 @@ function LoginForm() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="remember" 
+                    <Checkbox
+                      id="remember"
                       disabled={isLoading}
-                      {...register('rememberMe')} 
+                      {...register('rememberMe')}
                     />
                     <label
                       htmlFor="remember"
@@ -214,7 +217,7 @@ function LoginForm() {
                 </div>
 
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </div>
             </form>

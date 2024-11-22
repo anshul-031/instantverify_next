@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import { hash } from "bcrypt";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
-import { sign } from "jsonwebtoken";
-import { sendEmail } from "@/lib/email";
+import { NextResponse } from 'next/server';
+import { hash } from 'bcrypt';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+import { sign } from 'jsonwebtoken';
+import { sendEmail } from '@/lib/email';
 
 const signupSchema = z.object({
   firstName: z.string().min(2),
@@ -17,7 +17,8 @@ const signupSchema = z.object({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { firstName, lastName, email, phone, password, dateOfBirth } = signupSchema.parse(body);
+    const { firstName, lastName, email, phone, password, dateOfBirth } =
+      signupSchema.parse(body);
 
     const exists = await prisma.user.findFirst({
       where: { OR: [{ email }, { phone }] },
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
     if (exists) {
       return NextResponse.json(
-        { message: "User with this email or phone already exists" },
+        { message: 'User with this email or phone already exists' },
         { status: 400 }
       );
     }
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       // Send verification email
       await sendEmail({
         to: email,
-        subject: "Verify your email address",
+        subject: 'Verify your email address',
         html: `
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
             <h1 style="color: #1a56db; text-align: center;">Welcome to InstantVerify.in</h1>
@@ -73,21 +74,22 @@ export async function POST(req: Request) {
       });
 
       return NextResponse.json({
-        message: "Verification email sent",
+        message: 'Verification email sent',
         userId: user.id,
       });
     } catch (emailError) {
       // If email sending fails, still create the account but inform the user
-      console.error("Failed to send verification email:", emailError);
+      console.error('Failed to send verification email:', emailError);
       return NextResponse.json({
-        message: "Account created but verification email failed to send. Please use the resend verification option.",
+        message:
+          'Account created but verification email failed to send. Please use the resend verification option.',
         userId: user.id,
       });
     }
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error('Signup error:', error);
     return NextResponse.json(
-      { message: "Something went wrong" },
+      { message: 'Something went wrong' },
       { status: 500 }
     );
   }

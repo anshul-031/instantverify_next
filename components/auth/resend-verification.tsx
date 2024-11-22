@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResendVerificationProps {
   email: string;
@@ -9,39 +10,47 @@ interface ResendVerificationProps {
 }
 
 export function ResendVerification({ email, onSuccess }: ResendVerificationProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleResend = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      setLoading(true);
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to resend verification email');
+        throw new Error("Failed to resend verification email");
       }
+
+      toast({
+        title: "Verification Email Sent",
+        description: "Please check your inbox for the verification link.",
+      });
 
       onSuccess?.();
     } catch (error) {
-      console.error('Failed to resend verification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resend verification email. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="mt-2">
-      <Button
-        variant="link"
-        className="h-auto p-0 text-primary"
-        onClick={handleResend}
-        disabled={isLoading}
-      >
-        {isLoading ? 'Sending...' : 'Click here to resend verification email'}
-      </Button>
-    </div>
+    <Button
+      variant="link"
+      className="mt-2 px-0"
+      onClick={handleResend}
+      disabled={loading}
+    >
+      {loading ? "Sending..." : "Resend verification email"}
+    </Button>
   );
 }
