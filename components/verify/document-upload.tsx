@@ -1,11 +1,10 @@
-"use client";
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, Upload, Image as ImageIcon } from "lucide-react";
 import { Camera as CameraComponent } from "./camera";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentUploadProps {
   onUpload: (file: string) => void;
@@ -15,10 +14,20 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
   const [showCamera, setShowCamera] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload a file smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
