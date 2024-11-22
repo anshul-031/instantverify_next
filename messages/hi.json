@@ -1,0 +1,35 @@
+{
+  "common": {
+    "welcome": "स्वागत है",
+    "signIn": "साइन इन करें",
+    "signUp": "साइन अप करें",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "rememberMe": "मुझे याद रखें",
+    "or": "या",
+    "continueWith": "जारी रखें",
+    "dontHaveAccount": "खाता नहीं है?",
+    "alreadyHaveAccount": "पहले से खाता है?"
+  },
+  "nav": {
+    "home": "होम",
+    "verify": "सत्यापन",
+    "profile": "प्रोफ़ाइल",
+    "settings": "सेटिंग्स",
+    "logout": "लॉग आउट"
+  },
+  "verify": {
+    "title": "सत्यापन शुरू करें",
+    "purpose": "सत्यापन का उद्देश्य",
+    "country": "देश",
+    "documentType": "दस्तावेज़ प्रकार",
+    "submit": "सत्यापन जमा करें"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "language": "भाषा",
+    "theme": "थीम",
+    "notifications": "सूचनाएं"
+  }
+}

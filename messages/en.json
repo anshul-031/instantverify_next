@@ -1,0 +1,35 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "or": "or",
+    "continueWith": "Continue with",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?"
+  },
+  "nav": {
+    "home": "Home",
+    "verify": "Verify",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "verify": {
+    "title": "Start Verification",
+    "purpose": "Purpose of Verification",
+    "country": "Country",
+    "documentType": "Document Type",
+    "submit": "Submit Verification"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications"
+  }
+}

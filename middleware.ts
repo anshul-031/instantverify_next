@@ -1,3 +1,4 @@
+import { createMiddleware } from 'next-intl/server';
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 import { rateLimit } from './lib/rate-limit';
@@ -5,6 +6,13 @@ import { rateLimit } from './lib/rate-limit';
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500,
+});
+
+// Create intl middleware
+const intlMiddleware = createMiddleware({
+  locales: ['en', 'hi', 'fr', 'es', 'ar', 'ru', 'zh', 'ja', 'ko'],
+  defaultLocale: 'en',
+  localePrefix: 'as-needed'
 });
 
 export default withAuth(
@@ -34,7 +42,8 @@ export default withAuth(
       'camera=self, microphone=(), geolocation=()'
     );
 
-    return response;
+    // Apply intl middleware
+    return intlMiddleware(req);
   },
   {
     callbacks: {
@@ -48,6 +57,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
+    '/((?!api|_next|.*\\..*).*)',
     '/verify/:path*',
     '/profile/:path*',
     '/settings/:path*',
