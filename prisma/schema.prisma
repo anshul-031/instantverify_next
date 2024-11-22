@@ -1,13 +1,4 @@
-generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity"]
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
+// Update the User model in the existing schema.prisma file
 model User {
   id                String    @id @default(cuid())
   firstName         String
@@ -19,6 +10,9 @@ model User {
   emailVerified     DateTime?
   image             String?
   language          String    @default("en")
+  theme             String    @default("light")
+  emailNotifications Boolean  @default(true)
+  smsNotifications   Boolean  @default(true)
   role              UserRole  @default(REGULAR)
   credits           Int       @default(0)
   createdAt         DateTime  @default(now())
@@ -32,103 +26,4 @@ model User {
   subUsers          User[]    @relation("AdminToSubUser")
   admin             User?     @relation("AdminToSubUser", fields: [adminId], references: [id])
   adminId           String?
-}
-
-enum UserRole {
-  REGULAR
-  PRIVILEGED
-  ADMIN
-  OWNER
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Report {
-  id              String   @id @default(cuid())
-  userId          String
-  purpose         String
-  documentType    String
-  documentNumber  String
-  documentImage   String
-  personPhoto     String
-  verificationId  String   @unique
-  status          String
-  result          Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationRequest {
-  id              String    @id @default(cuid())
-  requesterId     String
-  responderId     String?
-  email           String?
-  link            String    @unique
-  type            String
-  status          String
-  expiresAt       DateTime
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  requester       User      @relation("Requester", fields: [requesterId], references: [id])
-  responder       User?     @relation("Responder", fields: [responderId], references: [id])
-}
-
-model Transaction {
-  id              String   @id @default(cuid())
-  userId          String
-  type            String
-  amount          Float
-  credits         Int
-  status          String
-  paymentId       String?
-  createdAt       DateTime @default(now())
-  user            User     @relation(fields: [userId], references: [id])
-}
-
-model Coupon {
-  id              String   @id @default(cuid())
-  code            String   @unique
-  discount        Float
-  minAmount       Float
-  maxDiscount     Float
-  validFrom       DateTime
-  validUntil      DateTime
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model VerificationPrice {
-  id                 String   @id @default(cuid())
-  type               String   @unique
-  basePrice          Float
-  userSpecificPrices Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
 }
