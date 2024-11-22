@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import languages from "@/messages/languages.json";
 
 export function useLanguage() {
   const router = useRouter();
@@ -16,13 +17,14 @@ export function useLanguage() {
   useEffect(() => {
     const loadTranslations = async () => {
       try {
-        const response = await fetch(`/api/translations/${session?.user?.language || 'en'}`);
-        if (!response.ok) throw new Error('Failed to load translations');
+        const response = await fetch(
+          `/api/translations/${session?.user?.language || "en"}`
+        );
+        if (!response.ok) throw new Error("Failed to load translations");
         const translations = await response.json();
-        // Store translations in a global context or state management system
         window.__translations = translations;
       } catch (error) {
-        console.error('Failed to load translations:', error);
+        console.error("Failed to load translations:", error);
       }
     };
 
@@ -32,6 +34,11 @@ export function useLanguage() {
   const changeLanguage = async (language: string) => {
     try {
       setLoading(true);
+
+      // Validate language code
+      if (!languages.supported.find((lang) => lang.code === language)) {
+        throw new Error("Invalid language code");
+      }
 
       // Update user's preferred language in the database
       const response = await fetch("/api/settings/language", {
@@ -49,12 +56,22 @@ export function useLanguage() {
 
       // Load new translations
       const translationsResponse = await fetch(`/api/translations/${language}`);
-      if (!translationsResponse.ok) throw new Error('Failed to load translations');
+      if (!translationsResponse.ok) throw new Error("Failed to load translations");
       const translations = await translationsResponse.json();
       window.__translations = translations;
 
+      // Update HTML dir attribute for RTL languages
+      document.documentElement.dir = languages.rtlLanguages.includes(language)
+        ? "rtl"
+        : "ltr";
+
       // Refresh the page with the new locale
       router.refresh();
+
+      toast({
+        title: "Language Updated",
+        description: "Your preferred language has been updated.",
+      });
     } catch (error) {
       toast({
         title: "Error",
@@ -69,7 +86,7 @@ export function useLanguage() {
 
   const translate = (key: string, params?: Record<string, string>) => {
     try {
-      let translation = key.split('.').reduce((obj, key) => obj[key], window.__translations || {});
+      let translation = key.split(".").reduce((obj, key) => obj[key], window.__translations || {});
       if (!translation) return key;
 
       if (params) {
@@ -86,9 +103,12 @@ export function useLanguage() {
   };
 
   return {
-    currentLanguage: session?.user?.language || "en",
+    currentLanguage: session?.user?.language || languages.defaultLanguage,
     changeLanguage,
     translate,
     loading,
+    isRTL: languages.rtlLanguages.includes(
+      session?.user?.language || languages.defaultLanguage
+    ),
   };
 }
