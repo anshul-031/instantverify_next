@@ -1,8 +1,21 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
+import { rateLimit } from './lib/rate-limit';
+
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 500,
+});
 
 export default withAuth(
-  function middleware(req) {
+  async function middleware(req) {
+    // Rate limiting
+    try {
+      await limiter.check(req, 100); // 100 requests per minute
+    } catch {
+      return new NextResponse('Too Many Requests', { status: 429 });
+    }
+
     // Add security headers
     const response = NextResponse.next();
     response.headers.set(
