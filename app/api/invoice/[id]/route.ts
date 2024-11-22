@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
+import { generateInvoice } from '@/lib/invoice-generator';
 import { authOptions } from '../../auth/auth-options';
 
 export async function GET(
@@ -31,63 +32,34 @@ export async function GET(
       );
     }
 
-    // Generate GST invoice HTML
-    const invoiceHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>GST Invoice - InstantVerify.in</title>
-          <style>
-            /* Add your invoice styling here */
-          </style>
-        </head>
-        <body>
-          <div class="invoice">
-            <h1>Tax Invoice</h1>
-            <div class="header">
-              <div>
-                <h2>InstantVerify.in</h2>
-                <p>GSTIN: YOUR_GSTIN</p>
-                <!-- Add your company details -->
-              </div>
-              <div>
-                <p>Invoice No: INV-${transaction.id}</p>
-                <p>Date: ${new Date(transaction.createdAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-            
-            <div class="customer">
-              <h3>Bill To:</h3>
-              <p>${transaction.user.firstName} ${transaction.user.lastName}</p>
-              <!-- Add more customer details -->
-            </div>
+    const invoiceData = {
+      invoiceNumber: `INV-${transaction.id}`,
+      date: transaction.createdAt,
+      customerName: `${transaction.user.firstName} ${transaction.user.lastName}`,
+      customerAddress: transaction.user.address || 'Address not provided',
+      customerGstin: transaction.user.gstin,
+      items: [
+        {
+          description: `${transaction.credits} Verification Credits`,
+          quantity: 1,
+          rate: transaction.amount,
+          amount: transaction.amount,
+          gstRate: 18, // 18% GST
+        },
+      ],
+      subtotal: transaction.amount,
+      cgst: transaction.amount * 0.09, // 9% CGST
+      sgst: transaction.amount * 0.09, // 9% SGST
+      igst: 0, // 0% IGST (for same state transactions)
+      total: transaction.amount * 1.18, // Total including 18% GST
+    };
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Amount</th>
-                  <th>GST (18%)</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Verification Credits</td>
-                  <td>₹${transaction.amount}</td>
-                  <td>₹${transaction.amount * 0.18}</td>
-                  <td>₹${transaction.amount * 1.18}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </body>
-      </html>
-    `;
+    const pdfBuffer = await generateInvoice(invoiceData);
 
-    return new NextResponse(invoiceHtml, {
+    return new NextResponse(pdfBuffer, {
       headers: {
-        'Content-Type': 'text/html',
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="invoice-${transaction.id}.pdf"`,
       },
     });
   } catch (error) {

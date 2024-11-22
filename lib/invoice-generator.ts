@@ -1,45 +1,113 @@
-import { jsPDF } from 'jspdf';
+import PDFDocument from 'pdfkit';
 
-interface Transaction {
-  id: string;
-  amount: number;
-  createdAt: string;
-  userId: string;
+interface InvoiceData {
+  invoiceNumber: string;
+  date: Date;
+  customerName: string;
+  customerGstin?: string;
+  customerAddress: string;
+  items: {
+    description: string;
+    quantity: number;
+    rate: number;
+    amount: number;
+    gstRate: number;
+  }[];
+  subtotal: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  total: number;
 }
 
-export async function generateInvoicePDF(transaction: Transaction): Promise<Buffer> {
-  const doc = new jsPDF();
-  
-  // Add company logo and details
-  doc.setFontSize(20);
-  doc.text('InstantVerify.in', 20, 20);
-  
-  doc.setFontSize(12);
-  doc.text('GST Invoice', 20, 30);
-  
-  // Add invoice details
-  doc.text(`Invoice Number: INV-${transaction.id}`, 20, 50);
-  doc.text(`Date: ${new Date(transaction.createdAt).toLocaleDateString()}`, 20, 60);
-  
-  // Add amount details
-  const amount = transaction.amount;
-  const gst = amount * 0.18;
-  const total = amount + gst;
-  
-  doc.text('Amount Details:', 20, 80);
-  doc.text(`Base Amount: ₹${amount.toFixed(2)}`, 30, 90);
-  doc.text(`GST (18%): ₹${gst.toFixed(2)}`, 30, 100);
-  doc.text(`Total Amount: ₹${total.toFixed(2)}`, 30, 110);
-  
-  // Add terms and conditions
-  doc.text('Terms & Conditions:', 20, 140);
-  doc.setFontSize(10);
-  doc.text('1. This is a computer-generated invoice.', 30, 150);
-  doc.text('2. All amounts are in Indian Rupees.', 30, 160);
-  
-  // Add footer
-  doc.setFontSize(8);
-  doc.text('InstantVerify.in | GSTIN: XXXXXXXXXXXX', 20, 280);
-  
-  return Buffer.from(doc.output('arraybuffer'));
+export async function generateInvoice(data: InvoiceData): Promise<Buffer> {
+  return new Promise((resolve) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks: Buffer[] = [];
+
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+
+    // Add company logo and details
+    doc
+      .fontSize(20)
+      .text('InstantVerify.in', { align: 'right' })
+      .fontSize(10)
+      .text('GSTIN: YOUR_GSTIN_HERE', { align: 'right' })
+      .text('123 Business Street', { align: 'right' })
+      .text('New Delhi, 110001', { align: 'right' })
+      .moveDown();
+
+    // Add invoice details
+    doc
+      .fontSize(16)
+      .text('TAX INVOICE', { align: 'center' })
+      .moveDown()
+      .fontSize(10)
+      .text(`Invoice Number: ${data.invoiceNumber}`)
+      .text(`Date: ${data.date.toLocaleDateString()}`)
+      .moveDown();
+
+    // Add customer details
+    doc
+      .text('Bill To:')
+      .text(data.customerName)
+      .text(data.customerAddress);
+
+    if (data.customerGstin) {
+      doc.text(`GSTIN: ${data.customerGstin}`);
+    }
+
+    doc.moveDown();
+
+    // Add table headers
+    const tableTop = doc.y;
+    const itemX = 50;
+    const quantityX = 250;
+    const rateX = 350;
+    const amountX = 450;
+
+    doc
+      .text('Description', itemX)
+      .text('Qty', quantityX)
+      .text('Rate', rateX)
+      .text('Amount', amountX)
+      .moveDown();
+
+    // Add items
+    data.items.forEach((item) => {
+      doc
+        .text(item.description, itemX)
+        .text(item.quantity.toString(), quantityX)
+        .text(item.rate.toFixed(2), rateX)
+        .text(item.amount.toFixed(2), amountX)
+        .moveDown();
+    });
+
+    // Add totals
+    const totalsY = doc.y + 20;
+    doc
+      .text('Subtotal:', 350, totalsY)
+      .text(data.subtotal.toFixed(2), amountX, totalsY)
+      .text('CGST:', 350, totalsY + 20)
+      .text(data.cgst.toFixed(2), amountX, totalsY + 20)
+      .text('SGST:', 350, totalsY + 40)
+      .text(data.sgst.toFixed(2), amountX, totalsY + 40)
+      .text('IGST:', 350, totalsY + 60)
+      .text(data.igst.toFixed(2), amountX, totalsY + 60)
+      .text('Total:', 350, totalsY + 80)
+      .text(data.total.toFixed(2), amountX, totalsY + 80);
+
+    // Add footer
+    doc
+      .fontSize(8)
+      .text(
+        'This is a computer-generated invoice and does not require a signature.',
+        50,
+        doc.page.height - 50,
+        { align: 'center' }
+      );
+
+    doc.end();
+  });
 }

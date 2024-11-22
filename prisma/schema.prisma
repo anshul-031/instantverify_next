@@ -1,4 +1,4 @@
-// Update the User model in the existing schema.prisma file
+// Update the schema to include GST fields
 model User {
   id                String    @id @default(cuid())
   firstName         String
@@ -10,11 +10,10 @@ model User {
   emailVerified     DateTime?
   image             String?
   language          String    @default("en")
-  theme             String    @default("light")
-  emailNotifications Boolean  @default(true)
-  smsNotifications   Boolean  @default(true)
   role              UserRole  @default(REGULAR)
   credits           Int       @default(0)
+  address           String?   // Added for invoice
+  gstin             String?   // Added for invoice
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   accounts          Account[]
@@ -23,6 +22,7 @@ model User {
   verificationRequests VerificationRequest[] @relation("Requester")
   receivedRequests  VerificationRequest[]    @relation("Responder")
   transactions      Transaction[]
+  notifications     Notification[]
   subUsers          User[]    @relation("AdminToSubUser")
   admin             User?     @relation("AdminToSubUser", fields: [adminId], references: [id])
   adminId           String?

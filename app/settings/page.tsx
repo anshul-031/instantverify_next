@@ -5,9 +5,7 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import languages from "@/messages/languages.json";
@@ -24,7 +22,18 @@ export default function SettingsPage() {
   const handleLanguageChange = async (value: string) => {
     try {
       setLoading(true);
-      await changeLanguage(value);
+      const response = await fetch("/api/settings/language", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update language");
+      }
+
+      await update({ language: value });
+
       toast({
         title: "Language Updated",
         description: "Your preferred language has been updated successfully.",

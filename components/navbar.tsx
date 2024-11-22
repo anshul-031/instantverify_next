@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
+import { NotificationBadge } from '@/components/notifications/notification-badge';
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -20,7 +21,7 @@ export function Navbar() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <nav className="flex items-center space-x-2">
+          <nav className="flex items-center space-x-4">
             {session ? (
               <>
                 <Link href="/verify">
@@ -34,6 +35,7 @@ export function Navbar() {
                     <Shield className="h-5 w-5 sm:hidden" />
                   </Button>
                 </Link>
+                <NotificationBadge />
                 <Link href="/profile">
                   <Button variant="ghost" className="h-9">
                     Profile
