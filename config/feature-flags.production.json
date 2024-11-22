@@ -1,0 +1,23 @@
+{
+  "auth": {
+    "googleLogin": true,
+    "facebookLogin": true,
+    "githubLogin": true
+  },
+  "verification": {
+    "aadhaarVerification": true,
+    "voterIdVerification": true,
+    "drivingLicenseVerification": true,
+    "panCardVerification": true
+  },
+  "payment": {
+    "razorpay": true,
+    "gstInvoice": true
+  },
+  "features": {
+    "accessManagement": true,
+    "couponManagement": true,
+    "requestVerification": true,
+    "verificationHistory": true
+  }
+}

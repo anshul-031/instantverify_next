@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Store feedback in database
+    // Store feedback with user info if available
     await prisma.feedback.create({
       data: {
         content: feedback,
@@ -23,7 +23,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ message: 'Feedback submitted successfully' });
+    return NextResponse.json({
+      message: 'Feedback submitted successfully',
+    });
   } catch (error) {
     console.error('Feedback submission error:', error);
     return NextResponse.json(
