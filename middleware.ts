@@ -3,17 +3,24 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // Add CORS headers
+    // Add security headers
     const response = NextResponse.next();
-    response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS"
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
+    );
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    response.headers.set(
+      "Content-Security-Policy",
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.razorpay.com;"
     );
     response.headers.set(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
+      "Permissions-Policy",
+      "camera=self, microphone=(), geolocation=()"
     );
+
     return response;
   },
   {

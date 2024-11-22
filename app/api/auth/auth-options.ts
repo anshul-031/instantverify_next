@@ -9,9 +9,14 @@ import { compare } from 'bcrypt';
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  pages: {
+    signIn: '/login',
+    error: '/login',
   },
   providers: [
     CredentialsProvider({
@@ -26,9 +31,7 @@ export const authOptions: AuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
+          where: { email: credentials.email },
         });
 
         if (!user || !user.password) {
@@ -70,10 +73,6 @@ export const authOptions: AuthOptions = {
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
   ],
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
