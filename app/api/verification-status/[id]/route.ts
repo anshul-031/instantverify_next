@@ -21,6 +21,13 @@ export async function GET(
         ],
         requesterId: session.user.id,
       },
+      include: {
+        steps: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
     });
 
     if (!verification) {
@@ -30,7 +37,28 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(verification);
+    // Calculate overall progress based on completed steps
+    const totalSteps = verification.steps.length;
+    const completedSteps = verification.steps.filter(
+      step => step.status === "completed"
+    ).length;
+    const progress = Math.round((completedSteps / totalSteps) * 100);
+
+    const response = {
+      id: verification.id,
+      status: verification.status,
+      progress,
+      steps: verification.steps.map(step => ({
+        name: step.name,
+        status: step.status,
+        description: step.description,
+        timestamp: step.createdAt.toISOString(),
+      })),
+      createdAt: verification.createdAt.toISOString(),
+      updatedAt: verification.updatedAt.toISOString(),
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Verification status error:", error);
     return NextResponse.json(

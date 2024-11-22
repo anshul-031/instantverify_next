@@ -10,7 +10,12 @@
     "or": "या",
     "continueWith": "जारी रखें",
     "dontHaveAccount": "खाता नहीं है?",
-    "alreadyHaveAccount": "पहले से खाता है?"
+    "alreadyHaveAccount": "पहले से खाता है?",
+    "faq": {
+      "title": "अक्सर पूछे जाने वाले प्रश्न",
+      "moreQuestions": "अभी भी सवाल हैं?",
+      "contactSupport": "हमारी सहायता टीम से संपर्क करें"
+    }
   },
   "nav": {
     "home": "होम",
