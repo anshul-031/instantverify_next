@@ -23,6 +23,13 @@ export function DocumentVerification({ onComplete }: DocumentVerificationProps) 
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const handleDocumentUpload = (data: { documentImage: string; documentNumber?: string }) => {
+    setDocumentImage(data.documentImage);
+    if (data.documentNumber) {
+      setDocumentNumber(data.documentNumber);
+    }
+  };
+
   const handleVerify = async () => {
     if (!documentImage || !documentNumber) {
       toast({
@@ -80,7 +87,7 @@ export function DocumentVerification({ onComplete }: DocumentVerificationProps) 
 
           <div className="space-y-2">
             <Label>Upload Aadhaar Card</Label>
-            <DocumentUpload onUpload={setDocumentImage} />
+            <DocumentUpload onUpload={handleDocumentUpload} />
           </div>
 
           <Button

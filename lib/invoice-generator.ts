@@ -1,10 +1,10 @@
 import PDFDocument from 'pdfkit';
 
-interface InvoiceData {
+export interface InvoiceData {
   invoiceNumber: string;
   date: Date;
   customerName: string;
-  customerGstin?: string;
+  customerGstin?: string | null; // Updated to allow null
   customerAddress: string;
   items: {
     description: string;
@@ -21,11 +21,11 @@ interface InvoiceData {
 }
 
 export async function generateInvoice(data: InvoiceData): Promise<Buffer> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const doc = new PDFDocument({ margin: 50 });
     const chunks: Buffer[] = [];
 
-    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('data', chunk => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
 
     // Add company logo and details
@@ -49,10 +49,7 @@ export async function generateInvoice(data: InvoiceData): Promise<Buffer> {
       .moveDown();
 
     // Add customer details
-    doc
-      .text('Bill To:')
-      .text(data.customerName)
-      .text(data.customerAddress);
+    doc.text('Bill To:').text(data.customerName).text(data.customerAddress);
 
     if (data.customerGstin) {
       doc.text(`GSTIN: ${data.customerGstin}`);
@@ -75,7 +72,7 @@ export async function generateInvoice(data: InvoiceData): Promise<Buffer> {
       .moveDown();
 
     // Add items
-    data.items.forEach((item) => {
+    data.items.forEach(item => {
       doc
         .text(item.description, itemX)
         .text(item.quantity.toString(), quantityX)

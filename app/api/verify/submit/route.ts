@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // Check user credits
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { credits: true },
+      select: { credits: true, email: true },
     });
 
     if (!user || user.credits < 1) {
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
         type,
         status: "pending",
         link: crypto.randomUUID(),
+        email: user.email, // Add the required email field
         expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
       },
     });

@@ -12,6 +12,13 @@ export async function POST(req: Request) {
 
     const { phone, otp } = await req.json();
 
+    if (!phone || !otp) {
+      return NextResponse.json(
+        { message: 'Phone number and OTP are required' },
+        { status: 400 }
+      );
+    }
+
     const verification = await prisma.phoneVerification.findFirst({
       where: {
         userId: session.user.id,

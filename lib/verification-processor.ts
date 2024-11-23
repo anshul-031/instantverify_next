@@ -4,6 +4,7 @@ import { verifyDrivingLicense } from "./providers/driving-license";
 import { checkCriminalRecords } from "./providers/criminal-records";
 import { matchFaces } from "./providers/face-match";
 import { generateReport } from "./report-generator";
+import { prisma } from "./prisma";
 
 interface VerificationData {
   documents: any;
@@ -94,9 +95,12 @@ export async function processVerification(
       dateOfBirth: data.documents.dateOfBirth,
       fatherName: data.documents.fatherName,
     });
-    await updateVerificationStep(requestId, "Criminal Records", "completed", {
-      records: criminalRecords,
-    });
+    await updateVerificationStep(
+      requestId,
+      "Criminal Records",
+      "completed",
+      `Found ${criminalRecords.length} records`
+    );
 
     // Generate Report
     await updateVerificationStep(requestId, "Report Generation", "processing");

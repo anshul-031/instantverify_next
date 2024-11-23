@@ -5,7 +5,8 @@ import { authOptions } from '../../auth/auth-options';
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions); <boltAction type="file" filePath="app/api/coupon/validate/route.ts">    if (!session) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

@@ -1,12 +1,21 @@
 import { Server as HTTPServer } from "http";
-import { Server as WebSocketServer } from "ws";
+import WebSocket from "ws";
 import { parse } from "url";
-import { verify } from "jsonwebtoken";
+import { verify, JwtPayload } from "jsonwebtoken";
 
-let wss: WebSocketServer;
+interface CustomWebSocket extends WebSocket {
+  userId?: string;
+  verificationId?: string;
+}
+
+interface CustomJwtPayload extends JwtPayload {
+  sub?: string;
+}
+
+let wss: WebSocket.Server;
 
 export function initializeWebSocket(server: HTTPServer) {
-  wss = new WebSocketServer({ noServer: true });
+  wss = new WebSocket.Server({ noServer: true });
 
   server.on("upgrade", async (request, socket, head) => {
     const { pathname, query } = parse(request.url!, true);
@@ -15,10 +24,14 @@ export function initializeWebSocket(server: HTTPServer) {
       try {
         // Verify JWT token from query
         const token = query.token as string;
-        const decoded = verify(token, process.env.NEXTAUTH_SECRET!);
+        const decoded = verify(token, process.env.NEXTAUTH_SECRET!) as CustomJwtPayload;
         
+        if (!decoded.sub) {
+          throw new Error("Invalid token: missing sub claim");
+        }
+
         wss.handleUpgrade(request, socket, head, (ws) => {
-          ws.userId = decoded.sub;
+          (ws as CustomWebSocket).userId = decoded.sub;
           wss.emit("connection", ws, request);
         });
       } catch (error) {
@@ -28,7 +41,7 @@ export function initializeWebSocket(server: HTTPServer) {
     }
   });
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", (ws: CustomWebSocket) => {
     ws.on("message", (message) => {
       try {
         const data = JSON.parse(message.toString());
@@ -46,7 +59,8 @@ export function notifyVerificationProgress(
   data: any
 ) {
   wss?.clients?.forEach((client) => {
-    if (client.userId === userId) {
+    const customClient = client as CustomWebSocket;
+    if (customClient.userId === userId) {
       client.send(
         JSON.stringify({
           type: "verification_progress",
@@ -58,7 +72,7 @@ export function notifyVerificationProgress(
   });
 }
 
-function handleWebSocketMessage(ws: any, message: any) {
+function handleWebSocketMessage(ws: CustomWebSocket, message: any) {
   switch (message.type) {
     case "subscribe_verification":
       ws.verificationId = message.verificationId;

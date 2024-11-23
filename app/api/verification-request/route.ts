@@ -33,9 +33,9 @@ export async function POST(req: Request) {
     const request = await prisma.verificationRequest.create({
       data: {
         requesterId: session.user.id,
-        email,
         type,
         link,
+        email,
         status: 'pending',
         expiresAt,
       },
@@ -52,10 +52,17 @@ export async function POST(req: Request) {
       to: email,
       subject: 'Verification Request',
       html: `
-        <p>You have received a verification request.</p>
-        <p>Click the link below to complete your verification:</p>
-        <a href="${verificationLink}">${verificationLink}</a>
-        <p>This link will expire in 14 days.</p>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <h1 style="color: #1a56db; text-align: center;">InstantVerify.in</h1>
+          <p>You have received a verification request.</p>
+          <p>Click the link below to complete your verification:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationLink}" style="background-color: #1a56db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Complete Verification</a>
+          </div>
+          <p>This link will expire in 14 days.</p>
+          <p>If you didn't expect this verification request, you can safely ignore this email.</p>
+          <p>Best regards,<br>The InstantVerify.in Team</p>
+        </div>
       `,
     });
 

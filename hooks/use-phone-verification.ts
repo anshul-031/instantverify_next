@@ -17,7 +17,8 @@ export function usePhoneVerification() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to send OTP");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to send OTP");
       }
 
       toast({
@@ -29,7 +30,7 @@ export function usePhoneVerification() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to send OTP. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to send OTP",
         variant: "destructive",
       });
       return false;
@@ -48,7 +49,8 @@ export function usePhoneVerification() {
       });
 
       if (!response.ok) {
-        throw new Error("Invalid OTP");
+        const error = await response.json();
+        throw new Error(error.message || "Invalid OTP");
       }
 
       toast({
@@ -60,7 +62,7 @@ export function usePhoneVerification() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid OTP. Please try again.",
+        description: error instanceof Error ? error.message : "Invalid OTP",
         variant: "destructive",
       });
       return false;

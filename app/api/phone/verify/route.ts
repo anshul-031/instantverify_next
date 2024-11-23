@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
-import twilio from 'twilio';
+import { Twilio } from 'twilio';
 import { authOptions } from '../../auth/auth-options';
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Initialize Twilio client only if credentials are available
+const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+  ? new Twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  : null;
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +16,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
+      return NextResponse.json(
+        { message: 'SMS service not configured' },
+        { status: 503 }
+      );
+    }
+
     const { phone } = await req.json();
+
+    if (!phone) {
+      return NextResponse.json(
+        { message: 'Phone number is required' },
+        { status: 400 }
+      );
+    }
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -32,7 +46,7 @@ export async function POST(req: Request) {
     });
 
     // Send OTP via SMS
-    await client.messages.create({
+    await twilioClient.messages.create({
       body: `Your InstantVerify.in verification code is: ${otp}`,
       to: phone,
       from: process.env.TWILIO_PHONE_NUMBER,
@@ -43,6 +57,16 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Phone verification error:', error);
+
+    // Handle specific Twilio errors
+    if ((error as any).code) {
+      const twilioError = error as { code: number; message: string };
+      return NextResponse.json(
+        { message: `SMS service error: ${twilioError.message}` },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { message: 'Failed to send OTP' },
       { status: 500 }

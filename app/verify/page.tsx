@@ -51,6 +51,7 @@ export default function VerifyPage() {
   const [activeTab, setActiveTab] = useState("advanced");
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
+  const [documentNumber, setDocumentNumber] = useState<string>("");
   const { toast } = useToast();
 
   const {
@@ -101,6 +102,13 @@ export default function VerifyPage() {
         description: "Failed to submit verification request",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDocumentUpload = (data: { documentImage: string; documentNumber?: string }) => {
+    setDocumentImage(data.documentImage);
+    if (data.documentNumber) {
+      setDocumentNumber(data.documentNumber);
     }
   };
 
@@ -214,6 +222,8 @@ export default function VerifyPage() {
                         id="documentNumber"
                         {...register("documentNumber")}
                         placeholder="Enter document number"
+                        value={documentNumber}
+                        onChange={(e) => setDocumentNumber(e.target.value)}
                       />
                       {errors.documentNumber && (
                         <p className="text-sm text-red-500">
@@ -236,7 +246,7 @@ export default function VerifyPage() {
 
               <div className="space-y-2">
                 <Label>Government ID</Label>
-                <DocumentUpload onUpload={setDocumentImage} />
+                <DocumentUpload onUpload={handleDocumentUpload} />
               </div>
             </div>
           </Card>

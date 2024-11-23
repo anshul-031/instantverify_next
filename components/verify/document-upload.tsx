@@ -7,12 +7,13 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentUploadProps {
-  onUpload: (file: string) => void;
+  onUpload: (data: { documentImage: string; documentNumber?: string }) => void;
 }
 
 export function DocumentUpload({ onUpload }: DocumentUploadProps) {
   const [showCamera, setShowCamera] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [documentNumber, setDocumentNumber] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -32,7 +33,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
       reader.onloadend = () => {
         const result = reader.result as string;
         setPreview(result);
-        onUpload(result);
+        onUpload({ documentImage: result, documentNumber });
       };
       reader.readAsDataURL(file);
     }
@@ -40,7 +41,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
 
   const handleCameraCapture = (photo: string) => {
     setPreview(photo);
-    onUpload(photo);
+    onUpload({ documentImage: photo, documentNumber });
     setShowCamera(false);
   };
 
@@ -101,6 +102,20 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
           </Dialog>
         </div>
       )}
+
+      <div className="space-y-2">
+        <Input
+          type="text"
+          placeholder="Document Number (Optional)"
+          value={documentNumber}
+          onChange={(e) => {
+            setDocumentNumber(e.target.value);
+            if (preview) {
+              onUpload({ documentImage: preview, documentNumber: e.target.value });
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

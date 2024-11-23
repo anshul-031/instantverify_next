@@ -69,6 +69,25 @@ model User {
   adminId           String?
   emailNotifications Boolean  @default(true)
   smsNotifications   Boolean  @default(true)
+  accessGrantsGiven  AccessGrant[] @relation("AccessGrantUser")
+  accessGrantsReceived AccessGrant[] @relation("AccessGrantGrantedTo")
+  feedback          Feedback[]
+  phoneVerifications PhoneVerification[]
+}
+
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  phone     String
+  otp       String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([phone])
 }
 
 model VerificationRequest {
@@ -78,6 +97,7 @@ model VerificationRequest {
   type          String
   status        String    @default("pending")
   link          String    @unique
+  email         String    // Add this field
   expiresAt     DateTime
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -86,7 +106,6 @@ model VerificationRequest {
   steps         VerificationStep[]
   report        Report?
 }
-
 model VerificationStep {
   id            String    @id @default(cuid())
   requestId     String
@@ -173,6 +192,15 @@ model Feedback {
   content   String
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+}
+
+model VerificationPrice {
+  id                  String   @id @default(cuid())
+  type                String   @unique
+  basePrice           Float
+  userSpecificPrices  Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 enum UserRole {

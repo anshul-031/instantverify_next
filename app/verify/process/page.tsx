@@ -24,7 +24,7 @@ export default function VerificationProcessPage() {
       description: "Upload required identification documents",
       component: (
         <DocumentUpload
-          onComplete={(documents) => {
+          onUpload={(documents) => {
             setData((prev) => ({ ...prev, documents }));
             setStep(1);
           }}

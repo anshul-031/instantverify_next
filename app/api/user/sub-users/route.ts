@@ -52,6 +52,9 @@ export async function POST(req: Request) {
         phone,
         role: 'REGULAR',
         adminId: session.user.id,
+        dateOfBirth: new Date(), // Set a default date for sub-users
+        emailVerified: new Date(), // Auto-verify sub-users
+        phoneVerified: true, // Auto-verify sub-users' phone
       },
     });
 

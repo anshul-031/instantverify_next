@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import languages from "@/messages/languages.json";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
