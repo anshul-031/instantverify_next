@@ -14,13 +14,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Camera } from "@/components/verify/camera";
 import { DocumentUpload } from "@/components/verify/document-upload";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const verificationSchema = z.object({
-  purpose: z.string(),
-  country: z.string(),
-  verificationType: z.string(),
+  purpose: z.string().min(1, "Purpose is required"),
+  country: z.string().min(1, "Country is required"),
+  verificationType: z.string().min(1, "Verification type is required"),
   aadhaarNumber: z.string().optional(),
-  documentNumber: z.string(),
+  documentNumber: z.string().min(1, "Document number is required"),
 });
 
 type VerificationForm = z.infer<typeof verificationSchema>;
@@ -48,15 +49,16 @@ const verificationTypes = {
 };
 
 export default function VerifyPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("advanced");
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
-  const [documentNumber, setDocumentNumber] = useState<string>("");
   const { toast } = useToast();
 
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<VerificationForm>({
@@ -77,7 +79,6 @@ export default function VerifyPage() {
         return;
       }
 
-      // Handle form submission
       const response = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,8 +95,12 @@ export default function VerifyPage() {
 
       const result = await response.json();
       
-      // Redirect to report page
-      window.location.href = `/report/${result.verificationId}`;
+      toast({
+        title: "Success",
+        description: "Verification submitted successfully",
+      });
+
+      router.push(`/report/${result.verificationId}`);
     } catch (error) {
       toast({
         title: "Error",
@@ -108,7 +113,7 @@ export default function VerifyPage() {
   const handleDocumentUpload = (data: { documentImage: string; documentNumber?: string }) => {
     setDocumentImage(data.documentImage);
     if (data.documentNumber) {
-      setDocumentNumber(data.documentNumber);
+      setValue("documentNumber", data.documentNumber);
     }
   };
 
@@ -122,7 +127,7 @@ export default function VerifyPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="purpose">Purpose of Verification</Label>
-                <Select onValueChange={(value) => register("purpose").onChange({ target: { value } })}>
+                <Select onValueChange={(value) => setValue("purpose", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select purpose" />
                   </SelectTrigger>
@@ -143,7 +148,7 @@ export default function VerifyPage() {
                 <Label htmlFor="country">Country</Label>
                 <Select 
                   defaultValue="IN"
-                  onValueChange={(value) => register("country").onChange({ target: { value } })}
+                  onValueChange={(value) => setValue("country", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
@@ -173,9 +178,7 @@ export default function VerifyPage() {
                     <div className="space-y-2">
                       <Label htmlFor="verificationType">Verification Type</Label>
                       <Select
-                        onValueChange={(value) => 
-                          register("verificationType").onChange({ target: { value } })
-                        }
+                        onValueChange={(value) => setValue("verificationType", value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select verification type" />
@@ -188,6 +191,11 @@ export default function VerifyPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.verificationType && (
+                        <p className="text-sm text-red-500">
+                          {errors.verificationType.message}
+                        </p>
+                      )}
                     </div>
 
                     {needsAadhaar && (
@@ -222,8 +230,6 @@ export default function VerifyPage() {
                         id="documentNumber"
                         {...register("documentNumber")}
                         placeholder="Enter document number"
-                        value={documentNumber}
-                        onChange={(e) => setDocumentNumber(e.target.value)}
                       />
                       {errors.documentNumber && (
                         <p className="text-sm text-red-500">
@@ -250,6 +256,12 @@ export default function VerifyPage() {
               </div>
             </div>
           </Card>
+
+          <div className="rounded-lg border bg-card p-4 text-card-foreground">
+            <p className="text-sm text-muted-foreground">
+              Verification fee: ₹100 + GST (Special 80% discount available)
+            </p>
+          </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Processing..." : "Submit Verification"}

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Landmark } from "lucide-react";
+import { Building2, Users, Landmark, IndianRupee } from "lucide-react";
+import Link from "next/link";
 
 const pricingPlans = [
   {
@@ -13,7 +14,8 @@ const pricingPlans = [
       "Standard processing time",
       "Email support",
     ],
-    price: "Starting from ₹999",
+    originalPrice: 100,
+    discountPercentage: 80,
     action: "Get Started",
   },
   {
@@ -45,6 +47,16 @@ const pricingPlans = [
 ];
 
 export function PricingSection() {
+  const calculateDiscountedPrice = (originalPrice: number, discountPercentage: number) => {
+    const discountedPrice = originalPrice * (1 - discountPercentage / 100);
+    const gst = discountedPrice * 0.18; // 18% GST
+    const finalPrice = discountedPrice + gst;
+    return {
+      discounted: discountedPrice.toFixed(2),
+      withGst: finalPrice.toFixed(2),
+    };
+  };
+
   return (
     <section className="container space-y-8">
       <div className="text-center">
@@ -75,13 +87,42 @@ export function PricingSection() {
                 ))}
               </ul>
               <div className="space-y-4">
-                <p className="text-2xl font-bold">{plan.price}</p>
-                <Button className="w-full">{plan.action}</Button>
+                {plan.originalPrice ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <IndianRupee className="h-4 w-4" />
+                      <span className="text-2xl font-bold line-through text-muted-foreground">
+                        {plan.originalPrice}
+                      </span>
+                      <span className="rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground">
+                        {plan.discountPercentage}% OFF
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-primary">
+                        <IndianRupee className="inline h-5 w-5" />
+                        {calculateDiscountedPrice(plan.originalPrice, plan.discountPercentage).discounted}
+                        <span className="text-sm font-normal text-muted-foreground"> + GST</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Final price: ₹{calculateDiscountedPrice(plan.originalPrice, plan.discountPercentage).withGst} (incl. GST)
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold">{plan.price}</p>
+                )}
+                <Link href={plan.title === "B2C" ? "/verify" : "/contact"}>
+                  <Button className="w-full">{plan.action}</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+      <p className="text-center text-sm text-muted-foreground">
+        * Special 80% discount is available for a limited time only. Regular prices will apply after the promotional period.
+      </p>
     </section>
   );
 }

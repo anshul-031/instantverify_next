@@ -3,13 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { sign } from "jsonwebtoken";
 import { sendEmail } from "@/lib/email";
 
+const COOLDOWN_MINUTES = 5;
+
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
 
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, firstName: true, emailVerified: true },
+      select: { 
+        id: true, 
+        firstName: true, 
+        emailVerified: true,
+        lastVerificationEmailSent: true 
+      },
     });
 
     if (!user) {
@@ -24,6 +31,22 @@ export async function POST(req: Request) {
         { message: "Email is already verified" },
         { status: 400 }
       );
+    }
+
+    // Check cooldown
+    if (user.lastVerificationEmailSent) {
+      const timeSinceLastEmail = Date.now() - user.lastVerificationEmailSent.getTime();
+      const minutesSinceLastEmail = Math.floor(timeSinceLastEmail / 1000 / 60);
+
+      if (minutesSinceLastEmail < COOLDOWN_MINUTES) {
+        return NextResponse.json(
+          { 
+            message: `Please wait ${COOLDOWN_MINUTES - minutesSinceLastEmail} minutes before requesting another verification email`,
+            remainingTime: COOLDOWN_MINUTES - minutesSinceLastEmail
+          },
+          { status: 429 }
+        );
+      }
     }
 
     const verificationToken = sign(
@@ -50,6 +73,12 @@ export async function POST(req: Request) {
           <p>Best regards,<br>The InstantVerify.in Team</p>
         </div>
       `,
+    });
+
+    // Update last verification email sent timestamp
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastVerificationEmailSent: new Date() },
     });
 
     return NextResponse.json({
