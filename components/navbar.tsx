@@ -1,13 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-import { Shield } from 'lucide-react';
+import { Shield, LogOut } from 'lucide-react';
 import { NotificationBadge } from '@/components/notifications/notification-badge';
+import { useRouter } from 'next/navigation';
 
 export function Navbar() {
   const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -46,6 +53,10 @@ export function Navbar() {
                     Settings
                   </Button>
                 </Link>
+                <Button variant="ghost" onClick={handleLogout} className="h-9">
+                  <LogOut className="h-5 w-5 mr-2" />
+                  Logout
+                </Button>
               </>
             ) : (
               <>

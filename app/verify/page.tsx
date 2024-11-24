@@ -15,10 +15,11 @@ import { Camera } from "@/components/verify/camera";
 import { DocumentUpload } from "@/components/verify/document-upload";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 
 const verificationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
-  country: z.string().min(1, "Country is required"),
+  country: z.string().default("IN"),
   verificationType: z.string().min(1, "Verification type is required"),
   aadhaarNumber: z.string().optional(),
   documentNumber: z.string().min(1, "Document number is required"),
@@ -48,6 +49,9 @@ const verificationTypes = {
   ],
 };
 
+const ORIGINAL_PRICE = 100;
+const DISCOUNT_PERCENTAGE = 80;
+
 export default function VerifyPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("advanced");
@@ -63,10 +67,34 @@ export default function VerifyPage() {
     formState: { errors, isSubmitting },
   } = useForm<VerificationForm>({
     resolver: zodResolver(verificationSchema),
+    defaultValues: {
+      country: "IN",
+    },
   });
 
   const verificationType = watch("verificationType");
   const needsAadhaar = verificationType?.includes("aadhaar");
+
+  const calculatePrice = () => {
+    const discountedPrice = ORIGINAL_PRICE * (1 - DISCOUNT_PERCENTAGE / 100);
+    const gst = discountedPrice * 0.18;
+    return {
+      original: ORIGINAL_PRICE,
+      discounted: discountedPrice.toFixed(2),
+      final: (discountedPrice + gst).toFixed(2),
+    };
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value !== "advanced") {
+      toast({
+        title: "Recommendation",
+        description: "Advanced verification provides the most comprehensive and reliable results. We recommend using advanced verification for better accuracy.",
+        variant: "warning",
+      });
+    }
+  };
 
   const onSubmit = async (data: VerificationForm) => {
     try {
@@ -117,6 +145,8 @@ export default function VerifyPage() {
     }
   };
 
+  const prices = calculatePrice();
+
   return (
     <div className="container py-8">
       <div className="mx-auto max-w-2xl">
@@ -157,20 +187,27 @@ export default function VerifyPage() {
                     <SelectItem value="IN">India</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.country && (
-                  <p className="text-sm text-red-500">{errors.country.message}</p>
-                )}
               </div>
             </div>
           </Card>
 
           <Card className="p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="advanced">Advanced</TabsTrigger>
                 <TabsTrigger value="medium">Medium</TabsTrigger>
                 <TabsTrigger value="basic">Basic</TabsTrigger>
               </TabsList>
+
+              {activeTab !== "advanced" && (
+                <Alert className="mt-4" variant="warning">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Advanced verification provides the most comprehensive and reliable results. 
+                    We recommend using advanced verification for better accuracy.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {Object.entries(verificationTypes).map(([level, types]) => (
                 <TabsContent key={level} value={level}>
@@ -258,9 +295,20 @@ export default function VerifyPage() {
           </Card>
 
           <div className="rounded-lg border bg-card p-4 text-card-foreground">
-            <p className="text-sm text-muted-foreground">
-              Verification fee: ₹100 + GST (Special 80% discount available)
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground line-through">
+                Original price: ₹{prices.original}
+              </p>
+              <p className="text-sm font-medium">
+                Special offer: ₹{prices.discounted} + GST
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Final price: ₹{prices.final} (incl. GST)
+              </p>
+              <p className="text-xs text-muted-foreground">
+                * Special {DISCOUNT_PERCENTAGE}% discount available for a limited time
+              </p>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
