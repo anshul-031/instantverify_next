@@ -24,9 +24,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
-.env.development
-.env.staging
-.env.production
+.env
 
 # vercel
 .vercel
@@ -43,3 +41,32 @@ next-env.d.ts
 /prisma/migrations/
 /prisma/*.db
 /prisma/*.db-journal
+
+# Logs
+logs
+*.log
+
+# Build artifacts
+dist/
+build/
+
+# Cache
+.cache/
+.next/cache/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# PWA
+public/sw.js
+public/workbox-*.js
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db

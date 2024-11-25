@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /verify/
+Disallow: /profile/
+Disallow: /settings/
+
+Sitemap: https://instantverify.in/sitemap.xml
