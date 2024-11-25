@@ -1,39 +1,60 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import languages from "@/messages/languages.json";
+import { frontendLogger } from "@/lib/logger";
 
 export function useLanguage() {
   const router = useRouter();
-  const pathname = usePathname();
   const { data: session, update } = useSession();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [translations, setTranslations] = useState<Record<string, any>>({});
 
   // Load translations for the current language
   useEffect(() => {
     const loadTranslations = async () => {
       try {
+        frontendLogger.debug('Loading translations', {
+          language: session?.user?.language || "en"
+        });
+
         const response = await fetch(
           `/api/translations/${session?.user?.language || "en"}`
         );
-        if (!response.ok) throw new Error("Failed to load translations");
-        const translations = await response.json();
-        window.__translations = translations;
+        
+        if (!response.ok) {
+          throw new Error("Failed to load translations");
+        }
+        
+        const data = await response.json();
+        setTranslations(data);
+        window.__translations = data;
+
+        frontendLogger.debug('Translations loaded successfully', {
+          language: session?.user?.language || "en",
+          translationKeys: Object.keys(data)
+        });
       } catch (error) {
-        console.error("Failed to load translations:", error);
+        frontendLogger.error('Failed to load translations', error);
+        toast({
+          title: "Error",
+          description: "Failed to load translations. Using default language.",
+          variant: "destructive",
+        });
       }
     };
 
     loadTranslations();
-  }, [session?.user?.language]);
+  }, [session?.user?.language, toast]);
 
   const changeLanguage = async (language: string) => {
     try {
       setLoading(true);
+      frontendLogger.debug('Changing language', { language });
 
       // Validate language code
       if (!languages.supported.find((lang) => lang.code === language)) {
@@ -56,9 +77,13 @@ export function useLanguage() {
 
       // Load new translations
       const translationsResponse = await fetch(`/api/translations/${language}`);
-      if (!translationsResponse.ok) throw new Error("Failed to load translations");
-      const translations = await translationsResponse.json();
-      window.__translations = translations;
+      if (!translationsResponse.ok) {
+        throw new Error("Failed to load translations");
+      }
+      
+      const newTranslations = await translationsResponse.json();
+      setTranslations(newTranslations);
+      window.__translations = newTranslations;
 
       // Update HTML dir attribute for RTL languages
       document.documentElement.dir = languages.rtlLanguages.includes(language)
@@ -68,11 +93,14 @@ export function useLanguage() {
       // Refresh the page with the new locale
       router.refresh();
 
+      frontendLogger.info('Language changed successfully', { language });
+
       toast({
         title: "Language Updated",
         description: "Your preferred language has been updated.",
       });
     } catch (error) {
+      frontendLogger.error('Language change failed', error);
       toast({
         title: "Error",
         description: "Failed to change language. Please try again.",
@@ -86,18 +114,23 @@ export function useLanguage() {
 
   const translate = (key: string, params?: Record<string, string>) => {
     try {
-      let translation = key.split(".").reduce((obj, key) => obj[key], window.__translations || {});
-      if (!translation) return key;
+      frontendLogger.debug('Translating key', { key, params });
+      let translation = key.split(".").reduce((obj, k) => obj?.[k], translations);
+      
+      if (!translation) {
+        frontendLogger.debug('Translation not found', { key });
+        return key;
+      }
 
       if (params) {
-        Object.entries(params).forEach(([key, value]) => {
-          translation = translation.replace(`{${key}}`, value);
+        Object.entries(params).forEach(([paramKey, value]) => {
+          translation = translation.replace(`{${paramKey}}`, value);
         });
       }
 
       return translation;
     } catch (error) {
-      console.error(`Translation error for key: ${key}`, error);
+      frontendLogger.error('Translation error', { key, error });
       return key;
     }
   };
