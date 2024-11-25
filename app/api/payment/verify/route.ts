@@ -3,22 +3,49 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { authOptions } from '../../auth/auth-options';
+import { backendLogger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      backendLogger.error('Unauthorized payment verification attempt');
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    } = await req.json();
+
+    backendLogger.info('Verifying payment', {
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id
+    });
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      backendLogger.error('Razorpay secret key not configured');
+      return NextResponse.json(
+        { message: 'Payment verification not configured' },
+        { status: 503 }
+      );
+    }
 
     // Verify signature
     const text = `${razorpay_order_id}|${razorpay_payment_id}`;
     const generated_signature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(text)
       .digest('hex');
 
     if (generated_signature !== razorpay_signature) {
+      backendLogger.error('Invalid payment signature', {
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id
+      });
       return NextResponse.json(
-        { message: 'Invalid signature' },
+        { message: 'Invalid payment signature' },
         { status: 400 }
       );
     }
@@ -29,6 +56,7 @@ export async function POST(req: Request) {
     });
 
     if (!transaction) {
+      backendLogger.error('Transaction not found', { orderId: razorpay_order_id });
       return NextResponse.json(
         { message: 'Transaction not found' },
         { status: 404 }
@@ -47,11 +75,17 @@ export async function POST(req: Request) {
       }),
     ]);
 
+    backendLogger.info('Payment verified and credits added', {
+      transactionId: transaction.id,
+      userId: transaction.userId,
+      credits: transaction.credits
+    });
+
     return NextResponse.json({
       message: 'Payment verified successfully',
     });
   } catch (error) {
-    console.error('Payment verification error:', error);
+    backendLogger.error('Payment verification error', error);
     return NextResponse.json(
       { message: 'Failed to verify payment' },
       { status: 500 }

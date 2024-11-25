@@ -13,9 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Camera } from "@/components/verify/camera";
 import { DocumentUpload } from "@/components/verify/document-upload";
+import { PaymentModal } from "@/components/verify/payment-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, IndianRupee } from "lucide-react";
+import { useCredits } from "@/hooks/use-credits";
 
 const verificationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
@@ -49,7 +51,7 @@ const verificationTypes = {
   ],
 };
 
-const ORIGINAL_PRICE = 100;
+const VERIFICATION_PRICE = 100;
 const DISCOUNT_PERCENTAGE = 80;
 
 export default function VerifyPage() {
@@ -58,7 +60,9 @@ export default function VerifyPage() {
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
   const { toast } = useToast();
+  const { credits } = useCredits();
 
   const {
     register,
@@ -77,10 +81,10 @@ export default function VerifyPage() {
   const needsAadhaar = verificationType?.includes("aadhaar");
 
   const calculatePrice = () => {
-    const discountedPrice = ORIGINAL_PRICE * (1 - DISCOUNT_PERCENTAGE / 100);
+    const discountedPrice = VERIFICATION_PRICE * (1 - DISCOUNT_PERCENTAGE / 100);
     const gst = discountedPrice * 0.18;
     return {
-      original: ORIGINAL_PRICE,
+      original: VERIFICATION_PRICE,
       discounted: discountedPrice.toFixed(2),
       final: (discountedPrice + gst).toFixed(2),
     };
@@ -97,17 +101,26 @@ export default function VerifyPage() {
     }
   };
 
-  const onSubmit = async (data: VerificationForm) => {
-    try {
-      if (!personPhoto || !documentImage) {
-        toast({
-          title: "Error",
-          description: "Please provide both person photo and document image",
-          variant: "destructive",
-        });
-        return;
-      }
+  const handleVerificationSubmit = async (data: VerificationForm) => {
+    if (!personPhoto || !documentImage) {
+      toast({
+        title: "Error",
+        description: "Please provide both person photo and document image",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    if (credits < 1) {
+      setShowPayment(true);
+      return;
+    }
+
+    await submitVerification(data);
+  };
+
+  const submitVerification = async (data: VerificationForm) => {
+    try {
       setLoading(true);
       const response = await fetch("/api/verify", {
         method: "POST",
@@ -120,8 +133,7 @@ export default function VerifyPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Verification failed");
+        throw new Error("Verification failed");
       }
 
       const result = await response.json();
@@ -135,7 +147,7 @@ export default function VerifyPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to submit verification request",
+        description: "Failed to submit verification request",
         variant: "destructive",
       });
     } finally {
@@ -157,7 +169,7 @@ export default function VerifyPage() {
       <div className="mx-auto max-w-2xl">
         <h1 className="mb-8 text-3xl font-bold">Start Verification</h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmit(handleVerificationSubmit)} className="space-y-8">
           <Card className="p-6">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -320,6 +332,16 @@ export default function VerifyPage() {
             {loading ? "Processing..." : "Submit Verification"}
           </Button>
         </form>
+
+        <PaymentModal
+          open={showPayment}
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => {
+            setShowPayment(false);
+            handleSubmit(handleVerificationSubmit)();
+          }}
+          amount={Number(prices.final)}
+        />
       </div>
     </div>
   );
