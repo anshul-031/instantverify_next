@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Phone, MessageSquare } from "lucide-react";
 
 export function ContactSection() {
   return (
@@ -15,6 +16,25 @@ export function ContactSection() {
         </p>
       </div>
       <div className="mx-auto max-w-[600px]">
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Phone className="h-5 w-5 text-primary" />
+            <a href="tel:+919808494950" className="text-lg hover:text-primary">
+              +91-9808494950
+            </a>
+          </div>
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <a 
+              href="https://wa.me/919808494950" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-lg hover:text-primary"
+            >
+              WhatsApp Us
+            </a>
+          </div>
+        </div>
         <form className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

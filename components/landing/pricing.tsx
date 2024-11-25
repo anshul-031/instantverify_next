@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Landmark, IndianRupee } from "lucide-react";
+import { Building2, Users, Landmark, IndianRupee, Clock } from "lucide-react";
 import Link from "next/link";
 
 const pricingPlans = [
@@ -67,6 +67,18 @@ export function PricingSection() {
           Choose the right plan for your needs
         </p>
       </div>
+
+      <div className="mx-auto max-w-md rounded-lg border-2 border-primary bg-primary/5 p-4 text-center">
+        <div className="flex items-center justify-center gap-2 text-lg font-bold text-primary">
+          <Clock className="h-5 w-5" />
+          Limited Time Offer!
+        </div>
+        <p className="mt-2">
+          Hurry! Get an incredible <span className="text-2xl font-bold text-primary">80% OFF</span> on all verifications.
+          Don't miss out on this exclusive discount!
+        </p>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pricingPlans.map((plan) => (
           <Card key={plan.title} className="flex flex-col">
@@ -94,7 +106,7 @@ export function PricingSection() {
                       <span className="text-2xl font-bold line-through text-muted-foreground">
                         {plan.originalPrice}
                       </span>
-                      <span className="rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground">
+                      <span className="rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground animate-pulse">
                         {plan.discountPercentage}% OFF
                       </span>
                     </div>
@@ -122,6 +134,8 @@ export function PricingSection() {
       </div>
       <p className="text-center text-sm text-muted-foreground">
         * Special 80% discount is available for a limited time only. Regular prices will apply after the promotional period.
+        <br />
+        Don't wait - Start your verification today and save big!
       </p>
     </section>
   );

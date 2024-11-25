@@ -52,7 +52,9 @@ export async function POST(req: Request) {
         { expiresIn: '24h' }
       );
 
-      const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`;
+      const domain = req.headers.get('host') || 'instantverify.in';
+      const protocol = domain.includes('localhost') ? 'http' : 'https';
+      const verificationUrl = `${protocol}://${domain}/verify-email?token=${verificationToken}`;
 
       // Send verification email
       await sendEmail({
