@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { sign } from 'jsonwebtoken';
 import { sendEmail } from '@/lib/email';
+import { getDomainUrl } from '@/lib/utils';
 
 const signupSchema = z.object({
   firstName: z.string().min(2),
@@ -45,26 +46,23 @@ export async function POST(req: Request) {
     });
 
     try {
-      // Generate verification token
       const verificationToken = sign(
         { userId: user.id },
         process.env.NEXTAUTH_SECRET!,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
 
-      const domain = req.headers.get('host') || 'instantverify.in';
-      const protocol = domain.includes('localhost') ? 'http' : 'https';
-      const verificationUrl = `${protocol}://${domain}/verify-email?token=${verificationToken}`;
+      const baseUrl = getDomainUrl(req);
+      const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
 
-      // Send verification email
       await sendEmail({
         to: email,
         subject: 'Verify your email address',
         html: `
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-            <h1 style="color: #1a56db; text-align: center;">Welcome to InstantVerify.in</h1>
+            <h1 style="color: #1a56db; text-align: center;">InstantVerify.in</h1>
             <p>Hello ${firstName},</p>
-            <p>Thank you for signing up! Please verify your email address by clicking the button below:</p>
+            <p>Please verify your email address by clicking the button below:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${verificationUrl}" style="background-color: #1a56db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Verify Email Address</a>
             </div>
@@ -80,7 +78,6 @@ export async function POST(req: Request) {
         userId: user.id,
       });
     } catch (emailError) {
-      // If email sending fails, still create the account but inform the user
       console.error('Failed to send verification email:', emailError);
       return NextResponse.json({
         message:

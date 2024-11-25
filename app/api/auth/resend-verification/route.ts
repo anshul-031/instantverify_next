@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sign } from "jsonwebtoken";
 import { sendEmail } from "@/lib/email";
+import { getDomainUrl } from "@/lib/utils";
 
 const COOLDOWN_MINUTES = 5;
 
@@ -55,7 +56,8 @@ export async function POST(req: Request) {
       { expiresIn: "24h" }
     );
 
-    const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`;
+    const baseUrl = getDomainUrl(req);
+    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
 
     await sendEmail({
       to: email,

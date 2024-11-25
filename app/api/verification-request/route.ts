@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '@/lib/email';
 import { authOptions } from '../auth/auth-options';
+import { getDomainUrl } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {
@@ -46,7 +47,8 @@ export async function POST(req: Request) {
       data: { credits: { decrement: 1 } },
     });
 
-    const verificationLink = `${process.env.NEXTAUTH_URL}/verify/${link}`;
+    const baseUrl = getDomainUrl(req);
+    const verificationLink = `${baseUrl}/verify/${link}`;
 
     await sendEmail({
       to: email,
