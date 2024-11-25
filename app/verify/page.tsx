@@ -15,7 +15,7 @@ import { Camera } from "@/components/verify/camera";
 import { DocumentUpload } from "@/components/verify/document-upload";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, IndianRupee } from "lucide-react";
 
 const verificationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
@@ -91,7 +91,7 @@ export default function VerifyPage() {
       toast({
         title: "Recommendation",
         description: "Advanced verification provides the most comprehensive and reliable results. We recommend using advanced verification for better accuracy.",
-        variant: "warning",
+        variant: "destructive",
       });
     }
   };
@@ -200,7 +200,7 @@ export default function VerifyPage() {
               </TabsList>
 
               {activeTab !== "advanced" && (
-                <Alert className="mt-4" variant="warning">
+                <Alert className="mt-4">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     Advanced verification provides the most comprehensive and reliable results. 
