@@ -22,7 +22,7 @@ export function GSTInvoice({ transaction }: GSTInvoiceProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  if (!featureFlags.ENABLE_GST_INVOICE) {
+  if (!featureFlags.payment.gstInvoice) {
     return null;
   }
 
