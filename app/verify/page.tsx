@@ -57,6 +57,7 @@ export default function VerifyPage() {
   const [activeTab, setActiveTab] = useState("advanced");
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -64,7 +65,7 @@ export default function VerifyPage() {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<VerificationForm>({
     resolver: zodResolver(verificationSchema),
     defaultValues: {
@@ -107,6 +108,7 @@ export default function VerifyPage() {
         return;
       }
 
+      setLoading(true);
       const response = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,7 +120,8 @@ export default function VerifyPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Verification failed");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Verification failed");
       }
 
       const result = await response.json();
@@ -132,9 +135,11 @@ export default function VerifyPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to submit verification request",
+        description: error instanceof Error ? error.message : "Failed to submit verification request",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -311,8 +316,8 @@ export default function VerifyPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Processing..." : "Submit Verification"}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Processing..." : "Submit Verification"}
           </Button>
         </form>
       </div>

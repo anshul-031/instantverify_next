@@ -11,36 +11,39 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Github, Facebook, Shield, Eye, EyeOff } from 'lucide-react';
+import { Github, Mail, Shield, Eye, EyeOff } from 'lucide-react';
 
-const signupSchema = z
-  .object({
-    firstName: z.string().min(2, 'First name must be at least 2 characters'),
-    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-    email: z.string().email('Invalid email address'),
-    phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(
-        /[^A-Za-z0-9]/,
-        'Password must contain at least one special character'
-      ),
-    confirmPassword: z.string(),
-    dateOfBirth: z.string().refine((date) => {
+const signupSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+  confirmPassword: z.string(),
+  dateOfBirth: z.string().refine(
+    (date) => {
       const dob = new Date(date);
       const today = new Date();
-      const age = today.getFullYear() - dob.getFullYear();
-      return age >= 18;
-    }, 'You must be at least 18 years old'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+      let age = today.getFullYear() - dob.getFullYear();
+      const maxAge = 150;
+      const monthDiff = today.getMonth() - dob.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      return age >= 18 && age <= maxAge;
+    },
+    { message: 'Age must be between 18 and 150 years' }
+  ),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
 
 type SignupForm = z.infer<typeof signupSchema>;
 
@@ -79,6 +82,10 @@ export default function SignupPage() {
     }
   };
 
+  const handleOAuthSignIn = (provider: 'google') => {
+    signIn(provider, { callbackUrl: '/' });
+  };
+
   if (verificationSent) {
     return (
       <div className="container flex h-screen w-screen flex-col items-center justify-center">
@@ -89,8 +96,8 @@ export default function SignupPage() {
               Check your email
             </h1>
             <p className="text-sm text-muted-foreground">
-              We&apos;ve sent you a verification link. Please check your email
-              to verify your account.
+              We&apos;ve sent you a verification link. Please check your email to
+              verify your account.
             </p>
           </div>
         </div>
@@ -285,32 +292,22 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                onClick={() => signIn('github', { callbackUrl: '/' })}
-                className="hover:border-primary/70 hover:bg-primary/10"
-              >
-                <Github className="mr-2 h-4 w-4" />
-                Github
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => signIn('facebook', { callbackUrl: '/' })}
-                className="hover:border-primary/70 hover:bg-primary/10"
-              >
-                <Facebook className="mr-2 h-4 w-4" />
-                Facebook
-              </Button>
-            </div>
-          </div>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthSignIn('google')}
+              className="hover:border-primary/70 hover:bg-primary/10"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Google
+            </Button>
 
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
+            <p className="px-8 text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link href="/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

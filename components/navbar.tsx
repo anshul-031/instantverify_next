@@ -8,7 +8,7 @@ import { NotificationBadge } from '@/components/notifications/notification-badge
 import { useRouter } from 'next/navigation';
 
 export function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -29,7 +29,7 @@ export function Navbar() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-4">
-            {session ? (
+            {status === 'authenticated' ? (
               <>
                 <Link href="/verify">
                   <Button
