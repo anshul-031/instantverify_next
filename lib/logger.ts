@@ -1,6 +1,6 @@
 import featureFlags from '@/config/feature-flags';
 
-type LogLevel = 'debug' | 'info' | 'error';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type LogContext = 'frontend' | 'backend';
 
 class Logger {
@@ -29,6 +29,12 @@ class Logger {
   info(message: string, data?: any) {
     if (this.shouldLog('info')) {
       console.info(this.formatMessage('info', message, data));
+    }
+  }
+
+  warn(message: string, data?: any) {
+    if (this.shouldLog('warn')) {
+      console.warn(this.formatMessage('warn', message, data));
     }
   }
 

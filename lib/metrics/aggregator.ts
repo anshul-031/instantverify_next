@@ -1,10 +1,10 @@
-import { Metric, MetricSummary } from "./types";
-import { backendLogger } from "@/lib/logger";
+import { Metric, MetricSummary } from './types';
+import { backendLogger } from '@/lib/logger';
 
 export class MetricsAggregator {
   public static calculateSummary(metrics: Metric[]): MetricSummary {
-    backendLogger.debug("Calculating metrics summary", {
-      metricsCount: metrics.length,
+    backendLogger.debug('Calculating metrics summary', {
+      metricsCount: metrics.length
     });
 
     try {
@@ -34,12 +34,12 @@ export class MetricsAggregator {
         lastTimestamp: lastMetric.timestamp,
       };
 
-      backendLogger.debug("Metrics summary calculated", summary);
+      backendLogger.debug('Metrics summary calculated', summary);
       return summary;
     } catch (error) {
-      backendLogger.error("Failed to calculate metrics summary", {
+      backendLogger.error('Failed to calculate metrics summary', {
         error,
-        metricsCount: metrics.length,
+        metricsCount: metrics.length
       });
       throw error;
     }
@@ -49,46 +49,41 @@ export class MetricsAggregator {
     metrics: Metric[],
     windowSize: number
   ): Metric[] {
-    backendLogger.debug("Aggregating metrics by time window", {
+    backendLogger.debug('Aggregating metrics by time window', {
       metricsCount: metrics.length,
-      windowSize,
+      windowSize
     });
 
     try {
       const windows = new Map<number, Metric[]>();
 
       metrics.forEach(metric => {
-        const windowStart =
-          Math.floor(metric.timestamp / windowSize) * windowSize;
+        const windowStart = Math.floor(metric.timestamp / windowSize) * windowSize;
         const window = windows.get(windowStart) || [];
         window.push(metric);
         windows.set(windowStart, window);
       });
 
-      const aggregated = Array.from(windows.entries()).map(
-        ([timestamp, windowMetrics]) => ({
-          timestamp,
-          value: windowMetrics.reduce((sum, m) => sum + m.value, 0),
-          metadata: {
-            count: windowMetrics.length,
-            average:
-              windowMetrics.reduce((sum, m) => sum + m.value, 0) /
-              windowMetrics.length,
-          },
-        })
-      );
+      const aggregated = Array.from(windows.entries()).map(([timestamp, windowMetrics]) => ({
+        timestamp,
+        value: windowMetrics.reduce((sum, m) => sum + m.value, 0),
+        metadata: {
+          count: windowMetrics.length,
+          average: windowMetrics.reduce((sum, m) => sum + m.value, 0) / windowMetrics.length,
+        },
+      }));
 
-      backendLogger.debug("Metrics aggregation completed", {
+      backendLogger.debug('Metrics aggregation completed', {
         originalCount: metrics.length,
-        aggregatedCount: aggregated.length,
+        aggregatedCount: aggregated.length
       });
 
       return aggregated;
     } catch (error) {
-      backendLogger.error("Failed to aggregate metrics by time window", {
+      backendLogger.error('Failed to aggregate metrics by time window', {
         error,
         metricsCount: metrics.length,
-        windowSize,
+        windowSize
       });
       throw error;
     }

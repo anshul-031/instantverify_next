@@ -1,4 +1,4 @@
-import { LRUCache } from "lru-cache";
+import { LRUCache } from 'lru-cache';
 
 interface Metric {
   value: number;
@@ -27,7 +27,7 @@ class Metrics {
   }
 
   public trackVerification(type: string, success: boolean) {
-    const key = `verification_${type}_${success ? "success" : "failure"}`;
+    const key = `verification_${type}_${success ? 'success' : 'failure'}`;
     const metrics = this.cache.get(key) || [];
     metrics.push({
       value: 1,
@@ -36,17 +36,14 @@ class Metrics {
     this.cache.set(key, metrics);
   }
 
-  public getMetrics(
-    type: string,
-    period: number = this.retentionPeriod
-  ): Record<string, number> {
+  public getMetrics(type: string, period: number = this.retentionPeriod): Record<string, number> {
     const now = Date.now();
     const cutoff = now - period;
     const metrics: Record<string, number> = {};
-
+    
     // Convert cache entries to array and iterate
     const entries = Array.from(this.cache.entries());
-
+    
     entries.forEach(([key, values]) => {
       if (key.startsWith(type)) {
         metrics[key] = values
@@ -60,10 +57,10 @@ class Metrics {
 
   public clearOldMetrics() {
     const cutoff = Date.now() - this.retentionPeriod;
-
+    
     // Convert cache entries to array and iterate
     const entries = Array.from(this.cache.entries());
-
+    
     entries.forEach(([key, values]) => {
       const filtered = values.filter(m => m.timestamp >= cutoff);
       if (filtered.length !== values.length) {

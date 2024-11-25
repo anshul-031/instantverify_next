@@ -2,21 +2,32 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '../../auth/auth-options';
+import { backendLogger } from '@/lib/logger';
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+
   try {
-    const session = await getServerSession(authOptions);
+    backendLogger.info('Access grant request received');
+    
     if (!session) {
+      backendLogger.warn('Unauthorized access grant attempt');
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { email, type } = await req.json();
+    backendLogger.debug('Processing access grant request', { 
+      grantorId: session.user.id,
+      granteeEmail: email,
+      type 
+    });
 
     const grantedToUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!grantedToUser) {
+      backendLogger.warn('Access grant failed - user not found', { email });
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
@@ -32,9 +43,18 @@ export async function POST(req: Request) {
       },
     });
 
+    backendLogger.info('Access grant created successfully', {
+      grantId: accessGrant.id,
+      grantorId: session.user.id,
+      granteeId: grantedToUser.id
+    });
+
     return NextResponse.json(accessGrant);
   } catch (error) {
-    console.error('Access grant error:', error);
+    backendLogger.error('Access grant creation failed', {
+      error,
+      userId: session?.user?.id
+    });
     return NextResponse.json(
       { message: 'Failed to grant access' },
       { status: 500 }

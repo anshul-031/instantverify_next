@@ -3,11 +3,18 @@ import { getServerSession } from 'next-auth';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { authOptions } from '../../auth/auth-options';
+import { backendLogger } from '@/lib/logger';
 
 export async function GET(req: Request) {
   try {
+    backendLogger.info('Feature flags fetch request received');
+    
     const session = await getServerSession(authOptions);
     if (!session?.user?.role || session.user.role !== 'OWNER') {
+      backendLogger.warn('Unauthorized feature flags access attempt', {
+        userId: session?.user?.id,
+        role: session?.user?.role
+      });
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,10 +24,13 @@ export async function GET(req: Request) {
       `config/feature-flags.${env}.json`
     );
 
+    backendLogger.debug('Reading feature flags file', { env, flagsPath });
     const flags = await readFile(flagsPath, 'utf-8');
+
+    backendLogger.info('Feature flags fetched successfully');
     return NextResponse.json(JSON.parse(flags));
   } catch (error) {
-    console.error('Feature flags fetch error:', error);
+    backendLogger.error('Failed to fetch feature flags', { error });
     return NextResponse.json(
       { message: 'Failed to fetch feature flags' },
       { status: 500 }
@@ -30,8 +40,14 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    backendLogger.info('Feature flags update request received');
+    
     const session = await getServerSession(authOptions);
     if (!session?.user?.role || session.user.role !== 'OWNER') {
+      backendLogger.warn('Unauthorized feature flags update attempt', {
+        userId: session?.user?.id,
+        role: session?.user?.role
+      });
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -42,13 +58,15 @@ export async function PUT(req: Request) {
       `config/feature-flags.${env}.json`
     );
 
+    backendLogger.debug('Updating feature flags', { env, flagsPath });
     await writeFile(flagsPath, JSON.stringify(flags, null, 2));
 
+    backendLogger.info('Feature flags updated successfully');
     return NextResponse.json({
       message: 'Feature flags updated successfully',
     });
   } catch (error) {
-    console.error('Feature flags update error:', error);
+    backendLogger.error('Feature flags update failed', { error });
     return NextResponse.json(
       { message: 'Failed to update feature flags' },
       { status: 500 }

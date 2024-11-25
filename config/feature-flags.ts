@@ -24,11 +24,13 @@ interface FeatureFlags {
     frontend: {
       debug: boolean;
       info: boolean;
+      warn: boolean;
       error: boolean;
     };
     backend: {
       debug: boolean;
       info: boolean;
+      warn: boolean;
       error: boolean;
     };
   };
@@ -60,11 +62,13 @@ const development: FeatureFlags = {
     frontend: {
       debug: true,
       info: true,
+      warn: true,
       error: true,
     },
     backend: {
       debug: true,
       info: true,
+      warn: true,
       error: true,
     },
   },
@@ -96,11 +100,13 @@ const production: FeatureFlags = {
     frontend: {
       debug: false,
       info: true,
+      warn: true,
       error: true,
     },
     backend: {
       debug: false,
       info: true,
+      warn: true,
       error: true,
     },
   },

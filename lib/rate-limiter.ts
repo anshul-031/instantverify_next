@@ -1,6 +1,6 @@
-import { LRUCache } from "lru-cache";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { LRUCache } from 'lru-cache';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 interface Options {
   uniqueTokenPerInterval?: number;
@@ -23,7 +23,7 @@ export class RateLimiter {
   }
 
   public async check(request: NextRequest): Promise<NextResponse | null> {
-    const ip = request.ip || "anonymous";
+    const ip = request.ip || 'anonymous';
     const tokenCount = (this.tokenCache.get(ip) as number[]) || [0];
     const currentUsage = tokenCount[0];
     const isRateLimited = currentUsage >= this.limit;
@@ -31,14 +31,14 @@ export class RateLimiter {
     if (isRateLimited) {
       return new NextResponse(
         JSON.stringify({
-          error: "Too Many Requests",
+          error: 'Too Many Requests',
           message: `Rate limit exceeded. Try again in ${Math.ceil(this.interval / 1000)} seconds`,
         }),
         {
           status: 429,
           headers: {
-            "Content-Type": "application/json",
-            "Retry-After": `${Math.ceil(this.interval / 1000)}`,
+            'Content-Type': 'application/json',
+            'Retry-After': `${Math.ceil(this.interval / 1000)}`,
           },
         }
       );

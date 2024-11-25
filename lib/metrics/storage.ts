@@ -1,6 +1,6 @@
-import { LRUCache } from "lru-cache";
-import { Metric } from "./types";
-import { backendLogger } from "@/lib/logger";
+import { LRUCache } from 'lru-cache';
+import { Metric } from './types';
+import { backendLogger } from '@/lib/logger';
 
 export class MetricsStorage {
   private cache: LRUCache<string, Metric[]>;
@@ -11,38 +11,38 @@ export class MetricsStorage {
       ttl,
     });
 
-    backendLogger.info("Metrics storage initialized", {
+    backendLogger.info('Metrics storage initialized', {
       maxEntries,
-      ttl,
+      ttl
     });
   }
 
   public get(key: string): Metric[] {
-    backendLogger.debug("Retrieving metrics from storage", { key });
+    backendLogger.debug('Retrieving metrics from storage', { key });
     return this.cache.get(key) || [];
   }
 
   public set(key: string, metrics: Metric[]): void {
-    backendLogger.debug("Setting metrics in storage", {
+    backendLogger.debug('Setting metrics in storage', {
       key,
-      metricsCount: metrics.length,
+      metricsCount: metrics.length
     });
 
     try {
       this.cache.set(key, metrics);
     } catch (error) {
-      backendLogger.error("Failed to set metrics in storage", {
+      backendLogger.error('Failed to set metrics in storage', {
         error,
-        key,
+        key
       });
       throw error;
     }
   }
 
   public append(key: string, metric: Metric): void {
-    backendLogger.debug("Appending metric to storage", {
+    backendLogger.debug('Appending metric to storage', {
       key,
-      metric,
+      metric
     });
 
     try {
@@ -50,36 +50,36 @@ export class MetricsStorage {
       metrics.push(metric);
       this.set(key, metrics);
     } catch (error) {
-      backendLogger.error("Failed to append metric to storage", {
+      backendLogger.error('Failed to append metric to storage', {
         error,
         key,
-        metric,
+        metric
       });
       throw error;
     }
   }
 
   public clear(key: string): void {
-    backendLogger.debug("Clearing metrics for key", { key });
+    backendLogger.debug('Clearing metrics for key', { key });
 
     try {
       this.cache.delete(key);
     } catch (error) {
-      backendLogger.error("Failed to clear metrics for key", {
+      backendLogger.error('Failed to clear metrics for key', {
         error,
-        key,
+        key
       });
       throw error;
     }
   }
 
   public clearAll(): void {
-    backendLogger.debug("Clearing all metrics from storage");
+    backendLogger.debug('Clearing all metrics from storage');
 
     try {
       this.cache.clear();
     } catch (error) {
-      backendLogger.error("Failed to clear all metrics", { error });
+      backendLogger.error('Failed to clear all metrics', { error });
       throw error;
     }
   }
@@ -87,18 +87,18 @@ export class MetricsStorage {
   public getKeys(): string[] {
     try {
       const keys = Array.from(this.cache.keys());
-      backendLogger.debug("Retrieved storage keys", {
-        keyCount: keys.length,
+      backendLogger.debug('Retrieved storage keys', {
+        keyCount: keys.length
       });
       return keys;
     } catch (error) {
-      backendLogger.error("Failed to retrieve storage keys", { error });
+      backendLogger.error('Failed to retrieve storage keys', { error });
       throw error;
     }
   }
 
   public cleanup(cutoff: number): void {
-    backendLogger.debug("Starting metrics cleanup", { cutoff });
+    backendLogger.debug('Starting metrics cleanup', { cutoff });
 
     try {
       const entries = Array.from(this.cache.entries());
@@ -112,14 +112,14 @@ export class MetricsStorage {
         }
       });
 
-      backendLogger.info("Metrics cleanup completed", {
+      backendLogger.info('Metrics cleanup completed', {
         cleanedKeys: cleanedCount,
-        totalKeys: entries.length,
+        totalKeys: entries.length
       });
     } catch (error) {
-      backendLogger.error("Failed to cleanup metrics", {
+      backendLogger.error('Failed to cleanup metrics', {
         error,
-        cutoff,
+        cutoff
       });
       throw error;
     }

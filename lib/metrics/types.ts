@@ -14,7 +14,7 @@ export interface MetricSummary {
   lastTimestamp: number;
 }
 
-export type MetricType = "api" | "verification" | "payment" | "user";
+export type MetricType = 'api' | 'verification' | 'payment' | 'user';
 
 export interface MetricsOptions {
   maxEntries?: number;

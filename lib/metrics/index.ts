@@ -1,7 +1,7 @@
-import { MetricsStorage } from "./storage";
-import { MetricsAggregator } from "./aggregator";
-import { Metric, MetricSummary, MetricType, MetricsOptions } from "./types";
-import { backendLogger } from "@/lib/logger";
+import { MetricsStorage } from './storage';
+import { MetricsAggregator } from './aggregator';
+import { Metric, MetricSummary, MetricType, MetricsOptions } from './types';
+import { backendLogger } from '@/lib/logger';
 
 export class Metrics {
   private storage: MetricsStorage;
@@ -16,25 +16,20 @@ export class Metrics {
       this.retentionPeriod
     );
 
-    backendLogger.info("Metrics system initialized", {
+    backendLogger.info('Metrics system initialized', {
       retentionPeriod: this.retentionPeriod,
       enableAggregation: this.enableAggregation,
-      maxEntries: options.maxEntries || 1000,
+      maxEntries: options.maxEntries || 1000
     });
   }
 
-  public trackApiCall(
-    endpoint: string,
-    responseTime: number,
-    status: number,
-    metadata?: Record<string, any>
-  ) {
+  public trackApiCall(endpoint: string, responseTime: number, status: number, metadata?: Record<string, any>) {
     const key = `api_${endpoint}_${status}`;
-    backendLogger.debug("Tracking API call", {
+    backendLogger.debug('Tracking API call', {
       endpoint,
       responseTime,
       status,
-      metadata,
+      metadata
     });
 
     try {
@@ -44,24 +39,20 @@ export class Metrics {
         metadata,
       });
     } catch (error) {
-      backendLogger.error("Failed to track API call", {
+      backendLogger.error('Failed to track API call', {
         error,
         endpoint,
-        status,
+        status
       });
     }
   }
 
-  public trackVerification(
-    type: string,
-    success: boolean,
-    metadata?: Record<string, any>
-  ) {
-    const key = `verification_${type}_${success ? "success" : "failure"}`;
-    backendLogger.debug("Tracking verification", {
+  public trackVerification(type: string, success: boolean, metadata?: Record<string, any>) {
+    const key = `verification_${type}_${success ? 'success' : 'failure'}`;
+    backendLogger.debug('Tracking verification', {
       type,
       success,
-      metadata,
+      metadata
     });
 
     try {
@@ -71,26 +62,21 @@ export class Metrics {
         metadata,
       });
     } catch (error) {
-      backendLogger.error("Failed to track verification", {
+      backendLogger.error('Failed to track verification', {
         error,
         type,
-        success,
+        success
       });
     }
   }
 
-  public trackCustomMetric(
-    type: MetricType,
-    name: string,
-    value: number,
-    metadata?: Record<string, any>
-  ) {
+  public trackCustomMetric(type: MetricType, name: string, value: number, metadata?: Record<string, any>) {
     const key = `${type}_${name}`;
-    backendLogger.debug("Tracking custom metric", {
+    backendLogger.debug('Tracking custom metric', {
       type,
       name,
       value,
-      metadata,
+      metadata
     });
 
     try {
@@ -100,50 +86,45 @@ export class Metrics {
         metadata,
       });
     } catch (error) {
-      backendLogger.error("Failed to track custom metric", {
+      backendLogger.error('Failed to track custom metric', {
         error,
         type,
-        name,
+        name
       });
     }
   }
 
-  public getMetrics(
-    type: string,
-    period: number = this.retentionPeriod
-  ): Record<string, MetricSummary> {
-    backendLogger.debug("Retrieving metrics", {
+  public getMetrics(type: string, period: number = this.retentionPeriod): Record<string, MetricSummary> {
+    backendLogger.debug('Retrieving metrics', {
       type,
-      period,
+      period
     });
 
     try {
       const now = Date.now();
       const cutoff = now - period;
       const metrics: Record<string, MetricSummary> = {};
-
+      
       const entries = Array.from(this.storage.getKeys());
-
+      
       entries.forEach(key => {
         if (key.startsWith(type)) {
-          const values = this.storage
-            .get(key)
-            .filter(m => m.timestamp >= cutoff);
+          const values = this.storage.get(key).filter(m => m.timestamp >= cutoff);
           metrics[key] = MetricsAggregator.calculateSummary(values);
         }
       });
 
-      backendLogger.debug("Retrieved metrics successfully", {
+      backendLogger.debug('Retrieved metrics successfully', {
         type,
-        metricsCount: Object.keys(metrics).length,
+        metricsCount: Object.keys(metrics).length
       });
 
       return metrics;
     } catch (error) {
-      backendLogger.error("Failed to retrieve metrics", {
+      backendLogger.error('Failed to retrieve metrics', {
         error,
         type,
-        period,
+        period
       });
       return {};
     }
@@ -154,71 +135,69 @@ export class Metrics {
     period: number = this.retentionPeriod,
     windowSize: number = 60000 // 1 minute default
   ): Record<string, Metric[]> {
-    backendLogger.debug("Retrieving time series metrics", {
+    backendLogger.debug('Retrieving time series metrics', {
       type,
       period,
-      windowSize,
+      windowSize
     });
 
     try {
       const now = Date.now();
       const cutoff = now - period;
       const metrics: Record<string, Metric[]> = {};
-
+      
       const entries = Array.from(this.storage.getKeys());
-
+      
       entries.forEach(key => {
         if (key.startsWith(type)) {
-          const values = this.storage
-            .get(key)
-            .filter(m => m.timestamp >= cutoff);
+          const values = this.storage.get(key).filter(m => m.timestamp >= cutoff);
           metrics[key] = this.enableAggregation
             ? MetricsAggregator.aggregateByTimeWindow(values, windowSize)
             : values;
         }
       });
 
-      backendLogger.debug("Retrieved time series metrics successfully", {
+      backendLogger.debug('Retrieved time series metrics successfully', {
         type,
-        metricsCount: Object.keys(metrics).length,
+        metricsCount: Object.keys(metrics).length
       });
 
       return metrics;
     } catch (error) {
-      backendLogger.error("Failed to retrieve time series metrics", {
+      backendLogger.error('Failed to retrieve time series metrics', {
         error,
         type,
         period,
-        windowSize,
+        windowSize
       });
       return {};
     }
   }
 
   public clearOldMetrics(): void {
-    backendLogger.debug("Clearing old metrics");
+    backendLogger.debug('Clearing old metrics');
 
     try {
       const cutoff = Date.now() - this.retentionPeriod;
       this.storage.cleanup(cutoff);
-      backendLogger.info("Old metrics cleared successfully");
+      backendLogger.info('Old metrics cleared successfully');
     } catch (error) {
-      backendLogger.error("Failed to clear old metrics", { error });
+      backendLogger.error('Failed to clear old metrics', { error });
     }
   }
 
   public reset(): void {
-    backendLogger.info("Resetting metrics system");
+    backendLogger.info('Resetting metrics system');
 
     try {
       this.storage.clearAll();
-      backendLogger.info("Metrics system reset successfully");
+      backendLogger.info('Metrics system reset successfully');
     } catch (error) {
-      backendLogger.error("Failed to reset metrics system", { error });
+      backendLogger.error('Failed to reset metrics system', { error });
     }
   }
 }
 
 export const metrics = new Metrics();
 
-export * from "./types";
+export * from './types';
