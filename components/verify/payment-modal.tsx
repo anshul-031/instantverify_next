@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,18 @@ export function PaymentModal({ open, onClose, onSuccess, amount }: PaymentModalP
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Load Razorpay script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const handlePayment = async () => {
     try {
       setLoading(true);
@@ -49,6 +61,10 @@ export function PaymentModal({ open, onClose, onSuccess, amount }: PaymentModalP
 
       const { orderId, key } = await response.json();
       frontendLogger.info('Payment order created', { orderId });
+
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK not loaded");
+      }
 
       const options = {
         key,
