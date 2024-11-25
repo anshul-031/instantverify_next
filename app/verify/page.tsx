@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, IndianRupee } from "lucide-react";
 import { useCredits } from "@/hooks/use-credits";
+import { useAuth } from "@/hooks/use-auth";
 
 const verificationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
@@ -55,6 +56,9 @@ const VERIFICATION_PRICE = 100;
 const DISCOUNT_PERCENTAGE = 80;
 
 export default function VerifyPage() {
+  // Use the useAuth hook to ensure authentication
+  const { session } = useAuth({ required: true });
+  
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("advanced");
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);

@@ -26,12 +26,14 @@ export async function middleware(request: NextRequest) {
                           request.nextUrl.pathname.startsWith('/profile') ||
                           request.nextUrl.pathname.startsWith('/settings');
 
+  // If trying to access protected route without auth, redirect to login
   if (isProtectedRoute && !token) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
+  // If trying to access auth pages while logged in, redirect to home
   if (isAuthPage && token) {
     return NextResponse.redirect(new URL('/', request.url));
   }
