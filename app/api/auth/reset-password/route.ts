@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { sendEmail } from "@/lib/email";
+import { getDomainUrl } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -19,21 +19,28 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = sign(
-      { id: user.id },
-      process.env.NEXTAUTH_SECRET!,
-      { expiresIn: "1h" }
-    );
+    const token = sign({ id: user.id }, process.env.NEXTAUTH_SECRET!, {
+      expiresIn: "1h",
+    });
 
-    const resetLink = `${process.env.NEXTAUTH_URL}/reset-password/${token}`;
+    const baseUrl = getDomainUrl(req);
+    const resetLink = `${baseUrl}/reset-password/${token}`;
 
     await sendEmail({
       to: email,
       subject: "Reset Your Password",
       html: `
-        <p>Click the link below to reset your password:</p>
-        <a href="${resetLink}">${resetLink}</a>
-        <p>This link will expire in 1 hour.</p>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <h1 style="color: #1a56db; text-align: center;">InstantVerify.in</h1>
+          <p>Hello ${user.firstName},</p>
+          <p>Click the button below to reset your password:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #1a56db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset Password</a>
+          </div>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this password reset, you can safely ignore this email.</p>
+          <p>Best regards,<br>The InstantVerify.in Team</p>
+        </div>
       `,
     });
 

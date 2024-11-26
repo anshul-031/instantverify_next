@@ -3,14 +3,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MessageSquare, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "next-auth/react";
 
 export function FeedbackBanner() {
   const [isOpen, setIsOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { data: session } = useSession();
+
+  // Pre-fill contact info for logged-in users
+  const userEmail = session?.user?.email || "";
+  const userPhone = session?.user?.phone || "";
 
   const handleSubmit = async () => {
     if (!feedback.trim()) {
@@ -27,7 +37,11 @@ export function FeedbackBanner() {
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ feedback }),
+        body: JSON.stringify({
+          feedback,
+          email: session ? userEmail : email,
+          phone: session ? userPhone : phone,
+        }),
       });
 
       if (!response.ok) {
@@ -40,6 +54,8 @@ export function FeedbackBanner() {
       });
 
       setFeedback("");
+      setEmail("");
+      setPhone("");
       setIsOpen(false);
     } catch (error) {
       toast({
@@ -78,19 +94,54 @@ export function FeedbackBanner() {
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <Textarea
-        placeholder="Tell us what you think..."
-        value={feedback}
-        onChange={(e) => setFeedback(e.target.value)}
-        className="mb-4 min-h-[100px]"
-      />
-      <Button
-        className="w-full"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? "Sending..." : "Send Feedback"}
-      </Button>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="feedback">Your Feedback</Label>
+          <Textarea
+            id="feedback"
+            placeholder="Tell us what you think..."
+            value={feedback}
+            onChange={e => setFeedback(e.target.value)}
+            className="min-h-[100px]"
+          />
+        </div>
+
+        {!session && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email (Optional)</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (Optional)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Your phone number"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        {session && (
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>Submitting as: {userEmail}</p>
+            {userPhone && <p>Contact: {userPhone}</p>}
+          </div>
+        )}
+
+        <Button className="w-full" onClick={handleSubmit} disabled={loading}>
+          {loading ? "Sending..." : "Send Feedback"}
+        </Button>
+      </div>
     </div>
   );
 }
