@@ -11,32 +11,33 @@ import { useToast } from "@/hooks/use-toast";
 
 interface VerificationReport {
   id: string;
-  status: "success" | "failed" | "warning";
+  status: string;
+  purpose: string;
+  documentType: string;
+  documentNumber: string;
+  personPhoto: string;
+  documentImage: string;
+  result?: {
+    status?: "success" | "failed" | "warning";
+    verificationScore?: number;
+    personalInfo?: {
+      name: string;
+      dateOfBirth: string;
+      gender: string;
+      fatherName: string;
+    };
+    addressInfo?: {
+      current: string;
+      permanent: string;
+      verified: boolean;
+    };
+    criminalRecords?: {
+      status: "clear" | "found" | "pending";
+      details?: string[];
+    };
+  };
   createdAt: string;
   updatedAt: string;
-  personalInfo: {
-    name: string;
-    dateOfBirth: string;
-    gender: string;
-    fatherName: string;
-  };
-  documentInfo: {
-    type: string;
-    number: string;
-    verified: boolean;
-    issueDate?: string;
-    expiryDate?: string;
-  };
-  addressInfo: {
-    current: string;
-    permanent: string;
-    verified: boolean;
-  };
-  criminalRecords: {
-    status: "clear" | "found" | "pending";
-    details?: string[];
-  };
-  verificationScore: number;
 }
 
 export function VerificationReport({ reportId }: { reportId: string }) {
@@ -102,7 +103,7 @@ export function VerificationReport({ reportId }: { reportId: string }) {
     );
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status?: string) => {
     switch (status) {
       case "success":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
@@ -117,7 +118,7 @@ export function VerificationReport({ reportId }: { reportId: string }) {
     <div className="container max-w-4xl py-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {getStatusIcon(report.status)}
+          {getStatusIcon(report.result?.status)}
           <div>
             <h1 className="text-2xl font-bold">Verification Report</h1>
             <p className="text-sm text-muted-foreground">
@@ -143,18 +144,18 @@ export function VerificationReport({ reportId }: { reportId: string }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Verification Score</p>
-                <p className="text-2xl font-bold">{report.verificationScore}%</p>
+                <p className="text-2xl font-bold">{report.result?.verificationScore || 0}%</p>
               </div>
               <Badge
                 variant={
-                  report.status === "success"
+                  report.result?.status === "success"
                     ? "default"
-                    : report.status === "failed"
+                    : report.result?.status === "failed"
                     ? "destructive"
                     : "secondary"
                 }
               >
-                {report.status.toUpperCase()}
+                {(report.result?.status || "pending").toUpperCase()}
               </Badge>
             </div>
           </CardContent>
@@ -166,10 +167,10 @@ export function VerificationReport({ reportId }: { reportId: string }) {
               <p className="text-sm font-medium">Document Information</p>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {report.documentInfo.type} - {report.documentInfo.number}
+                  {report.documentType} - {report.documentNumber}
                 </p>
-                <Badge variant={report.documentInfo.verified ? "default" : "destructive"}>
-                  {report.documentInfo.verified ? "Verified" : "Not Verified"}
+                <Badge variant={report.status === "completed" ? "default" : "destructive"}>
+                  {report.status === "completed" ? "Verified" : "Not Verified"}
                 </Badge>
               </div>
             </div>
@@ -190,24 +191,30 @@ export function VerificationReport({ reportId }: { reportId: string }) {
               <CardTitle>Personal Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Full Name</p>
-                  <p className="font-medium">{report.personalInfo.name}</p>
+              {report.result?.personalInfo ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Full Name</p>
+                    <p className="font-medium">{report.result.personalInfo.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date of Birth</p>
+                    <p className="font-medium">{report.result.personalInfo.dateOfBirth}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Gender</p>
+                    <p className="font-medium">{report.result.personalInfo.gender}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Father's Name</p>
+                    <p className="font-medium">{report.result.personalInfo.fatherName}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Date of Birth</p>
-                  <p className="font-medium">{report.personalInfo.dateOfBirth}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Gender</p>
-                  <p className="font-medium">{report.personalInfo.gender}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Father's Name</p>
-                  <p className="font-medium">{report.personalInfo.fatherName}</p>
-                </div>
-              </div>
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  Personal information not available
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -218,19 +225,27 @@ export function VerificationReport({ reportId }: { reportId: string }) {
               <CardTitle>Address Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="font-medium">Current Address</p>
-                  <Badge variant={report.addressInfo.verified ? "default" : "destructive"}>
-                    {report.addressInfo.verified ? "Verified" : "Not Verified"}
-                  </Badge>
-                </div>
-                <p className="text-muted-foreground">{report.addressInfo.current}</p>
-              </div>
-              <div>
-                <p className="mb-2 font-medium">Permanent Address</p>
-                <p className="text-muted-foreground">{report.addressInfo.permanent}</p>
-              </div>
+              {report.result?.addressInfo ? (
+                <>
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="font-medium">Current Address</p>
+                      <Badge variant={report.result.addressInfo.verified ? "default" : "destructive"}>
+                        {report.result.addressInfo.verified ? "Verified" : "Not Verified"}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground">{report.result.addressInfo.current}</p>
+                  </div>
+                  <div>
+                    <p className="mb-2 font-medium">Permanent Address</p>
+                    <p className="text-muted-foreground">{report.result.addressInfo.permanent}</p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  Address information not available
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -241,34 +256,40 @@ export function VerificationReport({ reportId }: { reportId: string }) {
               <CardTitle>Criminal Record Check</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">Status</p>
-                  <Badge
-                    variant={
-                      report.criminalRecords.status === "clear"
-                        ? "default"
-                        : report.criminalRecords.status === "found"
-                        ? "destructive"
-                        : "secondary"
-                    }
-                  >
-                    {report.criminalRecords.status.toUpperCase()}
-                  </Badge>
-                </div>
-                {report.criminalRecords.details && (
-                  <div className="space-y-2">
-                    <p className="font-medium">Details</p>
-                    <ul className="list-inside list-disc space-y-1">
-                      {report.criminalRecords.details.map((detail, index) => (
-                        <li key={index} className="text-muted-foreground">
-                          {detail}
-                        </li>
-                      ))}
-                    </ul>
+              {report.result?.criminalRecords ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">Status</p>
+                    <Badge
+                      variant={
+                        report.result.criminalRecords.status === "clear"
+                          ? "default"
+                          : report.result.criminalRecords.status === "found"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {report.result.criminalRecords.status.toUpperCase()}
+                    </Badge>
                   </div>
-                )}
-              </div>
+                  {report.result.criminalRecords.details && (
+                    <div className="space-y-2">
+                      <p className="font-medium">Details</p>
+                      <ul className="list-inside list-disc space-y-1">
+                        {report.result.criminalRecords.details.map((detail, index) => (
+                          <li key={index} className="text-muted-foreground">
+                            {detail}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  Criminal record information not available
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

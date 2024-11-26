@@ -1,19 +1,32 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, Upload, Image as ImageIcon } from "lucide-react";
 import { Camera as CameraComponent } from "./camera";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentUploadProps {
-  onUpload: (data: { documentImage: string; documentNumber?: string }) => void;
+  onUpload: (data: { 
+    documentImage: string; 
+    documentNumber?: string;
+    documentType: string;
+  }) => void;
 }
 
+const documentTypes = [
+  { value: "aadhaar", label: "Aadhaar Card" },
+  { value: "pan", label: "PAN Card" },
+  { value: "driving_license", label: "Driving License" },
+  { value: "voter_id", label: "Voter ID" },
+];
+
 export function DocumentUpload({ onUpload }: DocumentUploadProps) {
-  const [showCamera, setShowCamera] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [documentImage, setDocumentImage] = useState<string>("");
   const [documentNumber, setDocumentNumber] = useState("");
+  const [documentType, setDocumentType] = useState("aadhaar");
+  const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -32,25 +45,79 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setPreview(result);
-        onUpload({ documentImage: result, documentNumber });
+        setDocumentImage(result);
+        onUpload({ 
+          documentImage: result, 
+          documentNumber,
+          documentType 
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleCameraCapture = (photo: string) => {
-    setPreview(photo);
-    onUpload({ documentImage: photo, documentNumber });
+    setDocumentImage(photo);
+    onUpload({ 
+      documentImage: photo, 
+      documentNumber,
+      documentType 
+    });
     setShowCamera(false);
+  };
+
+  const handleDocumentTypeChange = (value: string) => {
+    setDocumentType(value);
+    if (documentImage) {
+      onUpload({
+        documentImage,
+        documentNumber,
+        documentType: value
+      });
+    }
+  };
+
+  const handleDocumentNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDocumentNumber(value);
+    if (documentImage) {
+      onUpload({
+        documentImage,
+        documentNumber: value,
+        documentType
+      });
+    }
   };
 
   return (
     <div className="space-y-4">
-      {preview ? (
+      <div className="space-y-2">
+        <Select value={documentType} onValueChange={handleDocumentTypeChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select document type" />
+          </SelectTrigger>
+          <SelectContent>
+            {documentTypes.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Input
+          placeholder="Document Number"
+          value={documentNumber}
+          onChange={handleDocumentNumberChange}
+        />
+      </div>
+
+      {documentImage ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
           <img
-            src={preview}
+            src={documentImage}
             alt="Document preview"
             className="h-full w-full object-cover"
           />
@@ -59,7 +126,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
             size="sm"
             className="absolute bottom-2 right-2"
             onClick={() => {
-              setPreview(null);
+              setDocumentImage("");
               if (fileInputRef.current) {
                 fileInputRef.current.value = "";
               }
@@ -73,7 +140,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
           <div>
             <Input
               type="file"
-              accept="image/*,application/pdf"
+              accept="image/*"
               onChange={handleFileChange}
               ref={fileInputRef}
               className="hidden"
@@ -102,20 +169,6 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
           </Dialog>
         </div>
       )}
-
-      <div className="space-y-2">
-        <Input
-          type="text"
-          placeholder="Document Number (Optional)"
-          value={documentNumber}
-          onChange={(e) => {
-            setDocumentNumber(e.target.value);
-            if (preview) {
-              onUpload({ documentImage: preview, documentNumber: e.target.value });
-            }
-          }}
-        />
-      </div>
     </div>
   );
 }

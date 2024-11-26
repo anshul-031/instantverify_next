@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Camera } from "@/components/verify/camera";
 import { DocumentUpload } from "@/components/verify/document-upload";
@@ -24,8 +23,26 @@ const verificationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
   country: z.string().default("IN"),
   verificationType: z.string().min(1, "Verification type is required"),
-  aadhaarNumber: z.string().optional(),
-  documentNumber: z.string().min(1, "Document number is required"),
+  aadhaarNumber: z.string()
+    .optional()
+    .refine((val) => !val || /^\d{12}$/.test(val), {
+      message: "Aadhaar number must be 12 digits",
+    }),
+  documentNumber: z.string()
+    .min(1, "Document number is required")
+    .refine((val) => {
+      if (!val) return false;
+      // Validate based on document type
+      if (val.startsWith("DL")) {
+        return /^[A-Z]{2}\d{13}$/.test(val); // DL format
+      }
+      return /^[A-Z0-9]{8,}$/.test(val); // Generic format
+    }, {
+      message: "Invalid document number format",
+    }),
+  personPhoto: z.string().min(1, "Person photo is required"),
+  documentImage: z.string().min(1, "Document image is required"),
+  documentType: z.string().min(1, "Document type is required"),
 });
 
 type VerificationForm = z.infer<typeof verificationSchema>;
@@ -61,6 +78,7 @@ export default function VerifyPage() {
   const [activeTab, setActiveTab] = useState("advanced");
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [verificationId, setVerificationId] = useState<string | null>(null);
@@ -73,6 +91,7 @@ export default function VerifyPage() {
     setValue,
     watch,
     formState: { errors },
+    trigger,
   } = useForm<VerificationForm>({
     resolver: zodResolver(verificationSchema),
     defaultValues: {
@@ -95,6 +114,7 @@ export default function VerifyPage() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    setValue("verificationType", ""); // Reset verification type when changing tabs
     if (value !== "advanced") {
       toast({
         title: "Recommendation",
@@ -105,7 +125,7 @@ export default function VerifyPage() {
   };
 
   const handleVerificationSubmit = async (data: VerificationForm) => {
-    if (!personPhoto || !documentImage) {
+    if (!personPhoto || !documentImage || !documentType) {
       toast({
         title: "Error",
         description: "Please provide both person photo and document image",
@@ -123,6 +143,7 @@ export default function VerifyPage() {
           ...data,
           personPhoto,
           documentImage,
+          documentType,
         }),
       });
 
@@ -149,11 +170,25 @@ export default function VerifyPage() {
     }
   };
 
-  const handleDocumentUpload = (data: { documentImage: string; documentNumber?: string }) => {
+  const handleDocumentUpload = async (data: { 
+    documentImage: string; 
+    documentNumber?: string;
+    documentType: string;
+  }) => {
     setDocumentImage(data.documentImage);
+    setDocumentType(data.documentType);
     if (data.documentNumber) {
       setValue("documentNumber", data.documentNumber);
+      await trigger("documentNumber");
     }
+    setValue("documentType", data.documentType);
+    setValue("documentImage", data.documentImage);
+  };
+
+  const handlePersonPhotoCapture = async (photo: string) => {
+    setPersonPhoto(photo);
+    setValue("personPhoto", photo);
+    await trigger("personPhoto");
   };
 
   const prices = calculatePrice();
@@ -203,104 +238,82 @@ export default function VerifyPage() {
           </Card>
 
           <Card className="p-6">
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-                <TabsTrigger value="medium">Medium</TabsTrigger>
-                <TabsTrigger value="basic">Basic</TabsTrigger>
-              </TabsList>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="verificationType">Verification Type</Label>
+                <Select
+                  onValueChange={(value) => setValue("verificationType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select verification type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {verificationTypes[activeTab as keyof typeof verificationTypes].map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.verificationType && (
+                  <p className="text-sm text-red-500">
+                    {errors.verificationType.message}
+                  </p>
+                )}
+              </div>
 
-              {activeTab !== "advanced" && (
-                <Alert className="mt-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Advanced verification provides the most comprehensive and reliable results. 
-                    We recommend using advanced verification for better accuracy.
-                  </AlertDescription>
-                </Alert>
+              {needsAadhaar && (
+                <div className="space-y-2">
+                  <Label htmlFor="aadhaarNumber">Aadhaar Number</Label>
+                  <Input
+                    id="aadhaarNumber"
+                    {...register("aadhaarNumber")}
+                    placeholder="Enter 12-digit Aadhaar number"
+                    maxLength={12}
+                  />
+                  {errors.aadhaarNumber && (
+                    <p className="text-sm text-red-500">
+                      {errors.aadhaarNumber.message}
+                    </p>
+                  )}
+                </div>
               )}
 
-              {Object.entries(verificationTypes).map(([level, types]) => (
-                <TabsContent key={level} value={level}>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="verificationType">Verification Type</Label>
-                      <Select
-                        onValueChange={(value) => setValue("verificationType", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select verification type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {types.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.verificationType && (
-                        <p className="text-sm text-red-500">
-                          {errors.verificationType.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {needsAadhaar && (
-                      <div className="space-y-2">
-                        <Label htmlFor="aadhaarNumber">Aadhaar Number</Label>
-                        <Input
-                          id="aadhaarNumber"
-                          {...register("aadhaarNumber")}
-                          placeholder="Enter 12-digit Aadhaar number"
-                        />
-                        {errors.aadhaarNumber && (
-                          <p className="text-sm text-red-500">
-                            {errors.aadhaarNumber.message}
-                          </p>
-                        )}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="mt-2"
-                          onClick={() => {
-                            // Handle OTP request
-                          }}
-                        >
-                          Request OTP
-                        </Button>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="documentNumber">Document Number</Label>
-                      <Input
-                        id="documentNumber"
-                        {...register("documentNumber")}
-                        placeholder="Enter document number"
-                      />
-                      {errors.documentNumber && (
-                        <p className="text-sm text-red-500">
-                          {errors.documentNumber.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+              <div className="space-y-2">
+                <Label htmlFor="documentNumber">Document Number</Label>
+                <Input
+                  id="documentNumber"
+                  {...register("documentNumber")}
+                  placeholder="Enter document number"
+                />
+                {errors.documentNumber && (
+                  <p className="text-sm text-red-500">
+                    {errors.documentNumber.message}
+                  </p>
+                )}
+              </div>
+            </div>
           </Card>
 
           <Card className="p-6">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Person Photo</Label>
-                <Camera onCapture={setPersonPhoto} />
+                <Camera onCapture={handlePersonPhotoCapture} />
+                {errors.personPhoto && (
+                  <p className="text-sm text-red-500">{errors.personPhoto.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>Government ID</Label>
                 <DocumentUpload onUpload={handleDocumentUpload} />
+                {errors.documentImage && (
+                  <p className="text-sm text-red-500">{errors.documentImage.message}</p>
+                )}
+                {errors.documentType && (
+                  <p className="text-sm text-red-500">{errors.documentType.message}</p>
+                )}
               </div>
             </div>
           </Card>
@@ -332,6 +345,9 @@ export default function VerifyPage() {
           onClose={() => setShowPayment(false)}
           onSuccess={() => {
             setShowPayment(false);
+            if (verificationId) {
+              router.push(`/report/${verificationId}`);
+            }
           }}
           amount={Number(prices.final)}
           verificationId={verificationId || undefined}
