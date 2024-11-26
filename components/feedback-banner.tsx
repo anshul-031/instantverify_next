@@ -101,11 +101,11 @@ export function FeedbackBanner() {
             id="feedback"
             placeholder="Tell us what you think..."
             value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
+            onChange={e => setFeedback(e.target.value)}
             className="min-h-[100px]"
           />
         </div>
-        
+
         {!session && (
           <>
             <div className="space-y-2">
@@ -115,7 +115,7 @@ export function FeedbackBanner() {
                 type="email"
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -125,7 +125,7 @@ export function FeedbackBanner() {
                 type="tel"
                 placeholder="Your phone number"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={e => setPhone(e.target.value)}
               />
             </div>
           </>
@@ -137,12 +137,8 @@ export function FeedbackBanner() {
             {userPhone && <p>Contact: {userPhone}</p>}
           </div>
         )}
-        
-        <Button
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
+
+        <Button className="w-full" onClick={handleSubmit} disabled={loading}>
           {loading ? "Sending..." : "Send Feedback"}
         </Button>
       </div>

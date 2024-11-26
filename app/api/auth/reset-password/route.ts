@@ -19,11 +19,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = sign(
-      { id: user.id },
-      process.env.NEXTAUTH_SECRET!,
-      { expiresIn: "1h" }
-    );
+    const token = sign({ id: user.id }, process.env.NEXTAUTH_SECRET!, {
+      expiresIn: "1h",
+    });
 
     const baseUrl = getDomainUrl(req);
     const resetLink = `${baseUrl}/reset-password/${token}`;
