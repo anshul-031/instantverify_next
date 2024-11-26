@@ -56,15 +56,14 @@ const VERIFICATION_PRICE = 100;
 const DISCOUNT_PERCENTAGE = 80;
 
 export default function VerifyPage() {
-  // Use the useAuth hook to ensure authentication
   const { session } = useAuth({ required: true });
-  
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("advanced");
   const [personPhoto, setPersonPhoto] = useState<string | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [verificationId, setVerificationId] = useState<string | null>(null);
   const { toast } = useToast();
   const { credits } = useCredits();
 
@@ -115,15 +114,6 @@ export default function VerifyPage() {
       return;
     }
 
-    if (credits < 1) {
-      setShowPayment(true);
-      return;
-    }
-
-    await submitVerification(data);
-  };
-
-  const submitVerification = async (data: VerificationForm) => {
     try {
       setLoading(true);
       const response = await fetch("/api/verify", {
@@ -141,13 +131,13 @@ export default function VerifyPage() {
       }
 
       const result = await response.json();
-      
-      toast({
-        title: "Success",
-        description: "Verification submitted successfully",
-      });
+      setVerificationId(result.verificationId);
 
-      router.push(`/report/${result.verificationId}`);
+      if (credits < 1) {
+        setShowPayment(true);
+      } else {
+        router.push(`/report/${result.verificationId}`);
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -342,9 +332,9 @@ export default function VerifyPage() {
           onClose={() => setShowPayment(false)}
           onSuccess={() => {
             setShowPayment(false);
-            handleSubmit(handleVerificationSubmit)();
           }}
           amount={Number(prices.final)}
+          verificationId={verificationId || undefined}
         />
       </div>
     </div>

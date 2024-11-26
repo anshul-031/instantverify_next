@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ interface PaymentModalProps {
   onClose: () => void;
   onSuccess: () => void;
   amount: number;
+  verificationId?: string;
 }
 
 declare global {
@@ -28,12 +30,8 @@ declare global {
   }
 }
 
-export function PaymentModal({
-  open,
-  onClose,
-  onSuccess,
-  amount,
-}: PaymentModalProps) {
+export function PaymentModal({ open, onClose, onSuccess, amount, verificationId }: PaymentModalProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [showCoupon, setShowCoupon] = useState(false);
@@ -67,7 +65,7 @@ export function PaymentModal({
 
       const data = await response.json();
       setDiscountedAmount(amount - data.discountAmount);
-
+      
       toast({
         title: "Success",
         description: "Coupon applied successfully!",
@@ -88,27 +86,34 @@ export function PaymentModal({
     if (discountedAmount === 0) {
       // If amount is 0 after discount, skip payment
       onSuccess();
+      if (verificationId) {
+        router.push(`/report/${verificationId}`);
+      }
       return;
     }
 
     try {
       setLoading(true);
-      frontendLogger.info("Initiating payment", { amount: discountedAmount });
+      frontendLogger.info('Initiating payment', { amount: discountedAmount });
 
       const response = await fetch("/api/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: discountedAmount, credits: 1 }),
+        body: JSON.stringify({ 
+          amount: discountedAmount, 
+          credits: 1,
+          verificationId 
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        frontendLogger.error("Payment initiation failed", error);
+        frontendLogger.error('Payment initiation failed', error);
         throw new Error(error.message || "Failed to initiate payment");
       }
 
       const { orderId, key } = await response.json();
-      frontendLogger.info("Payment order created", { orderId });
+      frontendLogger.info('Payment order created', { orderId });
 
       if (!window.Razorpay) {
         throw new Error("Razorpay SDK not loaded");
@@ -123,9 +128,9 @@ export function PaymentModal({
         order_id: orderId,
         handler: async (response: any) => {
           try {
-            frontendLogger.info("Payment successful, verifying", {
+            frontendLogger.info('Payment successful, verifying', {
               orderId,
-              paymentId: response.razorpay_payment_id,
+              paymentId: response.razorpay_payment_id
             });
 
             const verifyResponse = await fetch("/api/payment/verify", {
@@ -139,15 +144,18 @@ export function PaymentModal({
               throw new Error(error.message || "Payment verification failed");
             }
 
-            frontendLogger.info("Payment verified successfully");
+            frontendLogger.info('Payment verified successfully');
             toast({
               title: "Payment Successful",
-              description: "Your verification will now proceed.",
+              description: "Your verification report is ready.",
             });
 
             onSuccess();
+            if (verificationId) {
+              router.push(`/report/${verificationId}`);
+            }
           } catch (error) {
-            frontendLogger.error("Payment verification failed", error);
+            frontendLogger.error('Payment verification failed', error);
             toast({
               title: "Error",
               description: "Payment verification failed",
@@ -164,7 +172,7 @@ export function PaymentModal({
         },
         modal: {
           ondismiss: () => {
-            frontendLogger.info("Payment modal dismissed");
+            frontendLogger.info('Payment modal dismissed');
             setLoading(false);
           },
         },
@@ -173,11 +181,10 @@ export function PaymentModal({
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
-      frontendLogger.error("Payment error", error);
+      frontendLogger.error('Payment error', error);
       toast({
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to initiate payment",
+        description: error instanceof Error ? error.message : "Failed to initiate payment",
         variant: "destructive",
       });
       setLoading(false);
@@ -201,7 +208,7 @@ export function PaymentModal({
               <Input
                 type={showCoupon ? "text" : "password"}
                 value={couponCode}
-                onChange={e => setCouponCode(e.target.value)}
+                onChange={(e) => setCouponCode(e.target.value)}
                 placeholder="Enter coupon code"
               />
               <Button
@@ -252,17 +259,17 @@ export function PaymentModal({
             </p>
           </div>
 
-          <Button className="w-full" onClick={handlePayment} disabled={loading}>
+          <Button
+            className="w-full"
+            onClick={handlePayment}
+            disabled={loading}
+          >
             {loading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <IndianRupee className="mr-2 h-4 w-4" />
             )}
-            {loading
-              ? "Processing..."
-              : discountedAmount === 0
-                ? "Claim Credit"
-                : "Pay Now"}
+            {loading ? "Processing..." : discountedAmount === 0 ? "Claim Credit" : "Pay Now"}
           </Button>
         </div>
       </DialogContent>
