@@ -28,6 +28,9 @@ export default function VerificationProcessPage() {
             setData((prev) => ({ ...prev, documents }));
             setStep(1);
           }}
+          acceptedTypes={["image/jpeg", "image/png", "application/pdf"]} // specify accepted types
+          maxSize={5 * 1024 * 1024} // 5MB
+          required={true} // mark as required
         />
       ),
     },

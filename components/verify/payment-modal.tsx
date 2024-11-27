@@ -15,14 +15,7 @@ import { Label } from "@/components/ui/label";
 import { IndianRupee, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { frontendLogger } from "@/lib/logger";
-
-interface PaymentModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  amount: number;
-  verificationId?: string;
-}
+import { PaymentModalProps, PaymentResponse } from "./payment-types";
 
 declare global {
   interface Window {
@@ -30,7 +23,13 @@ declare global {
   }
 }
 
-export function PaymentModal({ open, onClose, onSuccess, amount, verificationId }: PaymentModalProps) {
+export function PaymentModal({ 
+  open, 
+  onClose, 
+  onSuccess, 
+  amount, 
+  verificationId = undefined 
+}: PaymentModalProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -84,10 +83,9 @@ export function PaymentModal({ open, onClose, onSuccess, amount, verificationId 
 
   const handlePayment = async () => {
     if (discountedAmount === 0) {
-      // If amount is 0 after discount, skip payment
       onSuccess();
       if (verificationId) {
-        router.push(`/report/${verificationId}`);
+        router.push(`/verify/status/${verificationId}`);
       }
       return;
     }
@@ -112,7 +110,7 @@ export function PaymentModal({ open, onClose, onSuccess, amount, verificationId 
         throw new Error(error.message || "Failed to initiate payment");
       }
 
-      const { orderId, key } = await response.json();
+      const { orderId, key }: PaymentResponse = await response.json();
       frontendLogger.info('Payment order created', { orderId });
 
       if (!window.Razorpay) {
@@ -152,7 +150,7 @@ export function PaymentModal({ open, onClose, onSuccess, amount, verificationId 
 
             onSuccess();
             if (verificationId) {
-              router.push(`/report/${verificationId}`);
+              router.push(`/verify/status/${verificationId}`);
             }
           } catch (error) {
             frontendLogger.error('Payment verification failed', error);

@@ -34,6 +34,7 @@ export async function generateReport(requestId: string): Promise<void> {
         userId: request.requesterId,
         verificationId: request.id,
         purpose: "verification",
+        verificationType:request.type,
         documentType: request.type,
         documentNumber: "", // Will be updated with actual document number
         personPhoto: "", // Will be updated with actual photo URL

@@ -13,6 +13,9 @@ interface DocumentUploadProps {
     documentNumber?: string;
     documentType: string;
   }) => void;
+  acceptedTypes: string[];  // New prop for accepted file types
+  maxSize: number;          // New prop for max file size
+  required: boolean;        // New prop to mark the field as required
 }
 
 const documentTypes = [
@@ -22,7 +25,7 @@ const documentTypes = [
   { value: "voter_id", label: "Voter ID" },
 ];
 
-export function DocumentUpload({ onUpload }: DocumentUploadProps) {
+export function DocumentUpload({ onUpload, acceptedTypes, maxSize, required }: DocumentUploadProps) {
   const [documentImage, setDocumentImage] = useState<string>("");
   const [documentNumber, setDocumentNumber] = useState("");
   const [documentType, setDocumentType] = useState("aadhaar");
@@ -33,15 +36,27 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      // Check file size first
+      if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: "Please upload a file smaller than 5MB",
+          description: `Please upload a file smaller than ${maxSize / 1024 / 1024}MB.`,
           variant: "destructive",
         });
         return;
       }
 
+      // Check file type
+      if (!acceptedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: `Please upload a valid file type. Accepted types: ${acceptedTypes.join(", ")}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If file passes validation, read it and upload
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
@@ -49,7 +64,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
         onUpload({ 
           documentImage: result, 
           documentNumber,
-          documentType 
+          documentType,
         });
       };
       reader.readAsDataURL(file);
@@ -140,7 +155,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
           <div>
             <Input
               type="file"
-              accept="image/*"
+              accept={acceptedTypes.join(",")}  // Use accepted types here
               onChange={handleFileChange}
               ref={fileInputRef}
               className="hidden"

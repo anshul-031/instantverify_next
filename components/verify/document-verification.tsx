@@ -87,7 +87,11 @@ export function DocumentVerification({ onComplete }: DocumentVerificationProps) 
 
           <div className="space-y-2">
             <Label>Upload Aadhaar Card</Label>
-            <DocumentUpload onUpload={handleDocumentUpload} />
+            <DocumentUpload onUpload={handleDocumentUpload} 
+            acceptedTypes={["image/jpeg", "image/png", "application/pdf"]} // specify accepted types
+            maxSize={5 * 1024 * 1024} // 5MB
+            required={true} // mark as required
+            />
           </div>
 
           <Button
