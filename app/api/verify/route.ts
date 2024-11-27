@@ -6,16 +6,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../auth/auth-options';
 
 // Only initialize S3 client if credentials are available
-const s3Client = process.env.AWS_ACCESS_KEY_ID && 
-                process.env.AWS_SECRET_ACCESS_KEY && 
-                process.env.AWS_REGION
+const s3Client = process.env.AWS_ACCESS_KEY_ID &&
+  process.env.AWS_SECRET_ACCESS_KEY &&
+  process.env.AWS_REGION
   ? new S3Client({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    })
+    region: process.env.AWS_REGION,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+  })
   : null;
 
 async function uploadToS3(base64Data: string, key: string): Promise<string> {
@@ -54,6 +54,10 @@ export async function POST(req: Request) {
       documentNumber,
       personPhoto,
       documentImage,
+      // Add other necessary fields from VerificationRequest
+      type, // Example field
+      email, // Example field
+      // ... other fields
     } = body;
 
     // Check user credits
@@ -94,7 +98,18 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create verification report
+    // Create VerificationRequest first
+    const verificationRequest = await prisma.verificationRequest.create({
+      data: {
+        requesterId: session.user.id,
+        status: 'pending',
+        link: `http://localhost:3000/verify/${verificationId}`, // Replace with your actual link generation logic
+        expiresAt: new Date(Date.now() + 86400000), // Expires in 24 hours
+        // ... other fields
+      },
+    });
+
+    // Create verification report using verificationRequest.id
     const report = await prisma.report.create({
       data: {
         userId: session.user.id,
@@ -103,7 +118,7 @@ export async function POST(req: Request) {
         documentNumber,
         personPhoto: personPhotoUrl,
         documentImage: documentImageUrl,
-        verificationId,
+        verificationId: verificationRequest.id, // Use the ID from VerificationRequest
         status: 'pending',
       },
     });

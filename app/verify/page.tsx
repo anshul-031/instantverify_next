@@ -24,6 +24,7 @@ const verificationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
   country: z.string().default("IN"),
   verificationType: z.string().min(1, "Verification type is required"),
+  documentType: z.string().min(1, "document type is required"),
   aadhaarNumber: z.string().optional(),
   documentNumber: z.string().min(1, "Document number is required"),
 });
@@ -119,7 +120,7 @@ export default function VerifyPage() {
       setShowPayment(true);
       return;
     }
-
+    console.log("credit : ",credits);
     await submitVerification(data);
   };
 
@@ -236,7 +237,12 @@ export default function VerifyPage() {
                     <div className="space-y-2">
                       <Label htmlFor="verificationType">Verification Type</Label>
                       <Select
-                        onValueChange={(value) => setValue("verificationType", value)}
+                        onValueChange={(value) => {
+                          setValue("verificationType", value);
+                          setValue("documentType", value);
+                        }
+
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select verification type" />
