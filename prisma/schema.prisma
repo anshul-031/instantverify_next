@@ -128,7 +128,7 @@ model Report {
   userId            String
   verificationId    String?   @unique
   purpose           String
-  verificationType  String    // Added this field
+  verificationType  String    @default("")
   documentType      String
   documentNumber    String
   personPhoto      String
