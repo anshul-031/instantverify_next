@@ -9,7 +9,7 @@ export const verifySchema = z.object({
   documentNumber: z.string().min(1, "Document number is required"),
   personPhoto: z.string().min(1, "Person photo is required"),
   documentImage: z.string().min(1, "Document image is required").optional(), // Optional change here
-  useCredits: z.string().min(1, "user credits is required"),
+  useCredits: z.string().min(1, "user credits is required").optional(),
 });
 
 export type VerifyRequest = z.infer<typeof verifySchema>;
